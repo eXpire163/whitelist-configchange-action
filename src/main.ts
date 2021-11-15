@@ -4,13 +4,14 @@ import { parse } from 'yaml';
 import { create } from 'jsondiffpatch';
 import { Buffer } from 'buffer';
 import Ajv from "ajv"
+import { validateDiff } from "./validation";
 
 
 const options: Options = {
   noCheckFilesRoot: ["index.js"], //files relative to root
   dynamicFilesCount: 2, //ignored folders starting from root
-  noCheckFilesDynamic: ["subber/namespace.yml"], //filename relative after ignored folders
-  noCheckPath: new Map([[ "dummy.yaml", ["my/annoying/*"]]]) //xpath (todo) in dynamic folders
+  noCheckFilesDynamic: ["subbed/namespace.yml"], //filename relative after ignored folders
+  schemaCheck: new Map([[ "dummy.yaml", "test.schema.json"]]) //xpath (todo) in dynamic folders
 }
 const summery = new Map<string, SummeryDetail>();
 
@@ -52,12 +53,8 @@ type Options = {
   noCheckFilesRoot: string[]
   dynamicFilesCount: number
   noCheckFilesDynamic: string[]
-  noCheckPath: Map<string, string[]>
+  schemaCheck: Map<string, string>
 }
-
-
-
-
 
 
 async function getContent(contentRequest:any, octokit: any) {
@@ -72,34 +69,31 @@ async function getContent(contentRequest:any, octokit: any) {
   return parse(contentOld)
 }
 
-function validateDiff(delta: any, filename: string): SummeryDetail {
+function validate(delta: any, filename: string, org:string, repo: string, octokit: any): SummeryDetail {
   //is there a whitelist entry
   // todo run schema validation on diff
-  if (!options.noCheckPath.has(filename)) {
+  if (!options.schemaCheck.has(filename)) {
     return { result: false, reason: "no noCheckPath found for this file " + filename }
   }
 
 
-  const paths = options.noCheckPath.get(filename)
-  console.log("ℹ working with noCheckPath", paths);
+  const schemaPath = options.schemaCheck.get(filename)
+  console.log("ℹ working with noCheckPath", schemaPath);
   console.log("ℹ current diff is", delta)
+
+  const contentRequest = { owner: org, repo: repo, path: filename }
+  const schema = getContent(contentRequest, octokit)
+
+  if(validateDiff(delta, schema)){
+    return {result: true, reason: "validation OK"}
+  }
 
   return { result: false, reason: "nothing fit" }
 }
 
-function validateChange(delta: never, schema: never): Promise<boolean> {
-  return new Promise<boolean>(resolve => {
-    const ajv = new Ajv() // options can be passed, e.g. {allErrors: true}
-    const validate = ajv.compile(schema)
-    const valid = validate(delta)
-    if (!valid) {
-      console.log(validate.errors)
-      resolve(false)
-    }
-    resolve(true)
-  })
-}
 
+
+// ## summery
 function setResult(filename: string, result: boolean, reason:string) {
   summery.set(filename, { result: result, reason: reason })
 }
@@ -121,6 +115,7 @@ async function run(): Promise<void> {
     const myToken = core.getInput('myToken');
     const octokit = github.getOctokit(myToken)
     const context = github.context;
+
 
     if (context.eventName != "pull_request") {
       console.log("this pipeline is only for pull requests")
@@ -213,7 +208,7 @@ async function run(): Promise<void> {
       //console.log(jsonDiffPatch.formatters.console.format(delta))
 
 
-      const result = validateDiff(delta, dynamicPath)
+      const result = validate(delta, dynamicPath, org, repo, octokit)
       setResult(filename, result.result, result.reason)
 
     }
