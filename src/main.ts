@@ -1,9 +1,9 @@
-//import { getOctokit, context as _context } from '@actions/github';
-import * as github from '@actions/github';
+import * as github from "@actions/github";
 import * as core from '@actions/core';
 import { parse } from 'yaml';
 import { create } from 'jsondiffpatch';
 import { Buffer } from 'buffer';
+import Ajv from "ajv"
 
 
 const options: Options = {
@@ -12,10 +12,9 @@ const options: Options = {
   noCheckFilesDynamic: ["subber/namespace.yml"], //filename relative after ignored folders
   noCheckPath: new Map([[ "dummy.yaml", ["my/annoying/*"]]]) //xpath (todo) in dynamic folders
 }
-let summery = new Map<string, SummeryDetail>();
+const summery = new Map<string, SummeryDetail>();
 
-
-var diffPatcher = create({
+const diffPatcher = create({
   // used to match objects when diffing arrays, by default only === operator is used
   objectHash: function (obj: any) {
     // this function is used only to when objects are not equal by ref
@@ -59,8 +58,10 @@ type Options = {
 
 
 
+
+
 async function getContent(contentRequest:any, octokit: any) {
-  var resultOld = await octokit.rest.repos.getContent(contentRequest);
+  const resultOld = await octokit.rest.repos.getContent(contentRequest);
   console.log("oldFileResult: " + resultOld)
   if (!resultOld) {
     console.log("old result was empty")
@@ -69,11 +70,11 @@ async function getContent(contentRequest:any, octokit: any) {
   const contentOld = Buffer.from(resultOld.data.content, 'base64').toString();
   console.log(contentRequest, contentOld)
   return parse(contentOld)
-
 }
 
 function validateDiff(delta: any, filename: string): SummeryDetail {
   //is there a whitelist entry
+  // todo run schema validation on diff
   if (!options.noCheckPath.has(filename)) {
     return { result: false, reason: "no noCheckPath found for this file " + filename }
   }
@@ -86,13 +87,24 @@ function validateDiff(delta: any, filename: string): SummeryDetail {
   return { result: false, reason: "nothing fit" }
 }
 
+function validateChange(delta: never, schema: never): Promise<boolean> {
+  return new Promise<boolean>(resolve => {
+    const ajv = new Ajv() // options can be passed, e.g. {allErrors: true}
+    const validate = ajv.compile(schema)
+    const valid = validate(delta)
+    if (!valid) {
+      console.log(validate.errors)
+      resolve(false)
+    }
+    resolve(true)
+  })
+}
+
 function setResult(filename: string, result: boolean, reason:string) {
   summery.set(filename, { result: result, reason: reason })
 }
 function printSummery() {
-
   console.log("########### result ##########");
-
   summery.forEach((value: SummeryDetail, key: string) => {
     console.log(`File ${key} was ${value.reason} ${value.result ? "✔" : "✖"}`)
   });
@@ -109,9 +121,6 @@ async function run(): Promise<void> {
     const myToken = core.getInput('myToken');
     const octokit = github.getOctokit(myToken)
     const context = github.context;
-
-
-
 
     if (context.eventName != "pull_request") {
       console.log("this pipeline is only for pull requests")
@@ -199,7 +208,7 @@ async function run(): Promise<void> {
       }
 
       // run the compare
-      var delta = diffPatcher.diff(jsonOld, jsonNew);
+      const delta = diffPatcher.diff(jsonOld, jsonNew);
       console.log("ℹ delta", delta)
       //console.log(jsonDiffPatch.formatters.console.format(delta))
 
