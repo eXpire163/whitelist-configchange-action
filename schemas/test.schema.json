@@ -3,46 +3,14 @@
     "description": "",
     "type": "object",
     "properties": {
-        "control-plane": {
-            "type": "object",
-            "properties": {
-                "version": {
-                    "type": "string",
-                    "minLength": 1
-                }
-            },
-            "required": [
-                "version"
-            ]
-        },
-        "internet-ingress": {
-            "type": "boolean",
-            "title": "Enable internet ingress for the account",
-            "default": false
-        },
-        "deploy_autoscaling_plugin": {
-            "type": "boolean",
-            "title": "Deploys K8s autoscaling plugin in order to use AWS autoscaling",
-            "default": false
-        },
         "nodegroups": {
             "type": "object",
             "additionalProperties": {
                 "$ref": "#/definitions/nodegroup"
             }
-        },
-        "control-plane-allowed-cidrs": {
-            "type": "object",
-            "additionalProperties": {
-                "$ref": "../../common_types.schema.json#/definitions/ipv4_cidr"
-            }
         }
     },
-    "required": [
-        "control-plane",
-        "nodegroups",
-        "control-plane-allowed-cidrs"
-    ],
+
     "additionalProperties": false,
     "definitions": {
         "nodegroup": {
