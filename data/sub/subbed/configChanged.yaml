@@ -1,0 +1,18 @@
+
+nodegroups:
+  blue:
+    desired-size: 2
+    instance-type: m4.xlarge
+    k8s-labels:
+      node-group-name: blue
+      env: prod
+    max-size: 5
+    min-size: 2
+  green:
+    instance-type: t2.medium
+    k8s-labels:
+      node-group-name: green
+      env: prod
+    min-size: 1
+    desired-size: 1
+    max-size: 4

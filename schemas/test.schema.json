@@ -1,0 +1,111 @@
+{
+    "$schema": "https://json-schema.org/draft/2019-09/schema",
+    "description": "",
+    "type": "object",
+    "properties": {
+        "control-plane": {
+            "type": "object",
+            "properties": {
+                "version": {
+                    "type": "string",
+                    "minLength": 1
+                }
+            },
+            "required": [
+                "version"
+            ]
+        },
+        "internet-ingress": {
+            "type": "boolean",
+            "title": "Enable internet ingress for the account",
+            "default": false
+        },
+        "deploy_autoscaling_plugin": {
+            "type": "boolean",
+            "title": "Deploys K8s autoscaling plugin in order to use AWS autoscaling",
+            "default": false
+        },
+        "nodegroups": {
+            "type": "object",
+            "additionalProperties": {
+                "$ref": "#/definitions/nodegroup"
+            }
+        },
+        "control-plane-allowed-cidrs": {
+            "type": "object",
+            "additionalProperties": {
+                "$ref": "../../common_types.schema.json#/definitions/ipv4_cidr"
+            }
+        }
+    },
+    "required": [
+        "control-plane",
+        "nodegroups",
+        "control-plane-allowed-cidrs"
+    ],
+    "additionalProperties": false,
+    "definitions": {
+        "nodegroup": {
+            "type": "object",
+            "properties": {
+                "node-volume-size": {
+                    "type": "integer",
+                    "description": "node volume size in GB",
+                    "default": 20,
+                    "minimum": 20,
+                    "maximum": 300
+                },
+                "instance-type": {
+                    "type": "string",
+                    "title": "Instance type for the node group",
+                    "description": "Following instance types are not supported: Instance types with '*g' (ARM-based CPU architecture) and 'm6i' (not available in all AZs)",
+                    "minLength": 1,
+                    "maxLength": 20,
+                    "pattern": "[a-z]\\d[a-fhj-z]?\\.[a-z0-9]+"
+                },
+                "autoscaling": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "k8s-labels": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 1000
+                            },
+                            {
+                                "type": "boolean"
+                            }
+                        ]
+                    }
+                },
+                "desired-size": {
+                    "type": "number",
+                    "minimum": 1,
+                    "maximum": 50
+                },
+                "min-size": {
+                    "type": "number",
+                    "minimum": 1,
+                    "maximum": 50
+                },
+                "max-size": {
+                    "type": "number",
+                    "minimum": 1,
+                    "maximum": 50
+                }
+            },
+            "required": [
+                "desired-size",
+                "instance-type",
+                "k8s-labels",
+                "max-size",
+                "min-size"
+            ],
+            "additionalProperties": false
+        }
+    }
+}

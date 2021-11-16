@@ -1,0 +1,20 @@
+{
+    "nodegroups": {
+        "blue": {
+            "desired-size": [
+                4,
+                2
+            ],
+            "instance-type": [
+                "m5.xlarge",
+                "m4.xlarge"
+            ]
+        },
+        "green": {
+            "desired-size": [
+                3,
+                1
+            ]
+        }
+    }
+}
