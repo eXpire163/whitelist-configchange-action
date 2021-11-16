@@ -10,7 +10,7 @@ const options: Options = {
   noCheckFilesRoot: ["index.js"], //files relative to root
   dynamicFilesCount: 2, //ignored folders starting from root
   noCheckFilesDynamic: ["subbed/namespace.yml"], //filename relative after ignored folders
-  schemaCheck: new Map([[ "dummy.yaml", "schemas/test.schema.json"]]) //xpath (todo) in dynamic folders
+  schemaCheck: new Map([[ "subbed/config.yaml", "schemas/test.schema.json"]]) //xpath (todo) in dynamic folders
 }
 const summery = new Map<string, SummeryDetail>();
 
@@ -30,13 +30,13 @@ type Options = {
 
 async function getContent(contentRequest:any, octokit: any) {
   const resultOld = await octokit.rest.repos.getContent(contentRequest);
-  console.log("oldFileResult: " + resultOld)
+  //console.log("oldFileResult: " + resultOld)
   if (!resultOld) {
-    console.log("old result was empty")
+    //console.log("old result was empty")
     return null
   }
   const contentOld = Buffer.from(resultOld.data.content, 'base64').toString();
-  console.log(contentRequest, contentOld)
+  //console.log(contentRequest, contentOld)
   return parse(contentOld)
 }
 
@@ -80,7 +80,7 @@ function printSummery() {
 async function run(): Promise<void> {
   try {
 
-    console.log("hi there ⚠");
+    //console.log("hi there ⚠");
 
     //getting base information
     const myToken = core.getInput('myToken');
@@ -108,9 +108,9 @@ async function run(): Promise<void> {
     const pull_number = payload.number
     const filesChanged : number = payload.pull_request.changed_files
 
-    console.log("ℹ this is a pr", repository.owner.login,
-      repository.name,
-      payload.number)
+    // console.log("ℹ this is a pr", repository.owner.login,
+    //   repository.name,
+    //   payload.number)
     //load pr files
     const thisPR = await octokit.rest.pulls.listFiles({
       owner: org,
@@ -132,8 +132,9 @@ async function run(): Promise<void> {
       }
 
       //only allowing yaml/yml files
-      if (filename.endsWith(".yaml") || filename.endsWith(".yml"))
-        console.log("ℹ file is a yml/yaml")
+      if (filename.endsWith(".yaml") || filename.endsWith(".yml")){
+        //console.log("ℹ file is a yml/yaml")
+      }
       else {
         setResult(filename, false, "file is not a yaml")
         continue
