@@ -3,47 +3,18 @@ import * as core from '@actions/core';
 import { parse } from 'yaml';
 import { create } from 'jsondiffpatch';
 import { Buffer } from 'buffer';
-import Ajv from "ajv"
-import { validateDiff } from "./validation";
+import { getDiffOptions, validateDiff } from "./validation";
 
 
 const options: Options = {
   noCheckFilesRoot: ["index.js"], //files relative to root
   dynamicFilesCount: 2, //ignored folders starting from root
   noCheckFilesDynamic: ["subbed/namespace.yml"], //filename relative after ignored folders
-  schemaCheck: new Map([[ "dummy.yaml", "test.schema.json"]]) //xpath (todo) in dynamic folders
+  schemaCheck: new Map([[ "dummy.yaml", "schemas/test.schema.json"]]) //xpath (todo) in dynamic folders
 }
 const summery = new Map<string, SummeryDetail>();
 
-const diffPatcher = create({
-  // used to match objects when diffing arrays, by default only === operator is used
-  objectHash: function (obj: any) {
-    // this function is used only to when objects are not equal by ref
-    return obj._id || obj.id;
-  },
-  arrays: {
-    // default true, detect items moved inside the array (otherwise they will be registered as remove+add)
-    detectMove: true,
-    // default false, the value of items moved is not included in deltas
-    includeValueOnMove: false
-  },
-  textDiff: {
-    // default 60, minimum string length (left and right sides) to use text diff algorythm: google-diff-match-patch
-    minLength: 60
-  },
-  propertyFilter: function (name: string, context: any) {
-    /*
-     this optional function can be specified to ignore object properties (eg. volatile data)
-      name: property name, present in either context.left or context.right objects
-      context: the diff context (has context.left and context.right objects)
-    */
-    return name.slice(0, 1) !== '$';
-  },
-  cloneDiffValues: false /* default false. if true, values in the obtained delta will be cloned
-      (using jsondiffpatch.clone by default), to ensure delta keeps no references to left or right objects. this becomes useful if you're diffing and patching the same objects multiple times without serializing deltas.
-      instead of true, a function can be specified here to provide a custom clone(value)
-      */
-});
+const diffPatcher = create(getDiffOptions());
 
 type SummeryDetail = {
   result: boolean;
@@ -69,7 +40,7 @@ async function getContent(contentRequest:any, octokit: any) {
   return parse(contentOld)
 }
 
-function validate(delta: any, filename: string, org:string, repo: string, octokit: any): SummeryDetail {
+export function validate(delta: any, filename: string, org:string, repo: string, octokit: any): SummeryDetail {
   //is there a whitelist entry
   // todo run schema validation on diff
   if (!options.schemaCheck.has(filename)) {

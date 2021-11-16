@@ -35,6 +35,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.validate = void 0;
 const github = __importStar(__nccwpck_require__(5438));
 const core = __importStar(__nccwpck_require__(2186));
 const yaml_1 = __nccwpck_require__(3552);
@@ -45,38 +46,10 @@ const options = {
     noCheckFilesRoot: ["index.js"],
     dynamicFilesCount: 2,
     noCheckFilesDynamic: ["subbed/namespace.yml"],
-    schemaCheck: new Map([["dummy.yaml", "test.schema.json"]]) //xpath (todo) in dynamic folders
+    schemaCheck: new Map([["dummy.yaml", "schemas/test.schema.json"]]) //xpath (todo) in dynamic folders
 };
 const summery = new Map();
-const diffPatcher = (0, jsondiffpatch_1.create)({
-    // used to match objects when diffing arrays, by default only === operator is used
-    objectHash: function (obj) {
-        // this function is used only to when objects are not equal by ref
-        return obj._id || obj.id;
-    },
-    arrays: {
-        // default true, detect items moved inside the array (otherwise they will be registered as remove+add)
-        detectMove: true,
-        // default false, the value of items moved is not included in deltas
-        includeValueOnMove: false
-    },
-    textDiff: {
-        // default 60, minimum string length (left and right sides) to use text diff algorythm: google-diff-match-patch
-        minLength: 60
-    },
-    propertyFilter: function (name, context) {
-        /*
-         this optional function can be specified to ignore object properties (eg. volatile data)
-          name: property name, present in either context.left or context.right objects
-          context: the diff context (has context.left and context.right objects)
-        */
-        return name.slice(0, 1) !== '$';
-    },
-    cloneDiffValues: false /* default false. if true, values in the obtained delta will be cloned
-        (using jsondiffpatch.clone by default), to ensure delta keeps no references to left or right objects. this becomes useful if you're diffing and patching the same objects multiple times without serializing deltas.
-        instead of true, a function can be specified here to provide a custom clone(value)
-        */
-});
+const diffPatcher = (0, jsondiffpatch_1.create)((0, validation_1.getDiffOptions)());
 function getContent(contentRequest, octokit) {
     return __awaiter(this, void 0, void 0, function* () {
         const resultOld = yield octokit.rest.repos.getContent(contentRequest);
@@ -106,6 +79,7 @@ function validate(delta, filename, org, repo, octokit) {
     }
     return { result: false, reason: "nothing fit" };
 }
+exports.validate = validate;
 // ## summery
 function setResult(filename, result, reason) {
     summery.set(filename, { result: result, reason: reason });
