@@ -46,20 +46,20 @@ const options = {
     noCheckFilesRoot: ["index.js"],
     dynamicFilesCount: 2,
     noCheckFilesDynamic: ["subbed/namespace.yml"],
-    schemaCheck: new Map([["dummy.yaml", "schemas/test.schema.json"]]) //xpath (todo) in dynamic folders
+    schemaCheck: new Map([["subbed/config.yaml", "schemas/test.schema.json"]]) //xpath (todo) in dynamic folders
 };
 const summery = new Map();
 const diffPatcher = (0, jsondiffpatch_1.create)((0, validation_1.getDiffOptions)());
 function getContent(contentRequest, octokit) {
     return __awaiter(this, void 0, void 0, function* () {
         const resultOld = yield octokit.rest.repos.getContent(contentRequest);
-        console.log("oldFileResult: " + resultOld);
+        //console.log("oldFileResult: " + resultOld)
         if (!resultOld) {
-            console.log("old result was empty");
+            //console.log("old result was empty")
             return null;
         }
         const contentOld = buffer_1.Buffer.from(resultOld.data.content, 'base64').toString();
-        console.log(contentRequest, contentOld);
+        //console.log(contentRequest, contentOld)
         return (0, yaml_1.parse)(contentOld);
     });
 }
@@ -94,7 +94,7 @@ function printSummery() {
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            console.log("hi there ⚠");
+            //console.log("hi there ⚠");
             //getting base information
             const myToken = core.getInput('myToken');
             const octokit = github.getOctokit(myToken);
@@ -116,7 +116,9 @@ function run() {
             const repo = repository.name;
             const pull_number = payload.number;
             const filesChanged = payload.pull_request.changed_files;
-            console.log("ℹ this is a pr", repository.owner.login, repository.name, payload.number);
+            // console.log("ℹ this is a pr", repository.owner.login,
+            //   repository.name,
+            //   payload.number)
             //load pr files
             const thisPR = yield octokit.rest.pulls.listFiles({
                 owner: org,
@@ -133,8 +135,9 @@ function run() {
                     continue;
                 }
                 //only allowing yaml/yml files
-                if (filename.endsWith(".yaml") || filename.endsWith(".yml"))
-                    console.log("ℹ file is a yml/yaml");
+                if (filename.endsWith(".yaml") || filename.endsWith(".yml")) {
+                    //console.log("ℹ file is a yml/yaml")
+                }
                 else {
                     setResult(filename, false, "file is not a yaml");
                     continue;
