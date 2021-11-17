@@ -55,6 +55,8 @@ export function validate(delta: any, filename: string, org:string, repo: string,
   const contentRequest = { owner: org, repo: repo, path: filename }
   const schema = getContent(contentRequest, octokit)
 
+  console.log("ℹ current schema is", schema)
+
   if(validateDiff(delta, schema)){
     return {result: true, reason: "validation OK"}
   }
