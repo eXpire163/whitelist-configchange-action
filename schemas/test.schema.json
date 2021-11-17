@@ -66,13 +66,6 @@
                     "maximum": 50
                 }
             },
-            "required": [
-                "desired-size",
-                "instance-type",
-                "k8s-labels",
-                "max-size",
-                "min-size"
-            ],
             "additionalProperties": false
         }
     }

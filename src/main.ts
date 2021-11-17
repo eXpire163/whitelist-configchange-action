@@ -1,7 +1,7 @@
 import * as github from "@actions/github";
 import * as core from '@actions/core';
 import { parse } from 'yaml';
-import { create } from 'jsondiffpatch';
+import { create, formatters } from 'jsondiffpatch';
 import { Buffer } from 'buffer';
 import { getDiffOptions, validateDiff } from "./validation";
 
@@ -177,6 +177,7 @@ async function run(): Promise<void> {
       // run the compare
       const delta = diffPatcher.diff(jsonOld, jsonNew);
       console.log("ℹ delta", delta)
+
       //console.log(jsonDiffPatch.formatters.console.format(delta))
 
 
@@ -197,7 +198,6 @@ async function run(): Promise<void> {
       throw "PR contains changes that are not whitelisted"
 
     }
-
     console.log("all files seem to be valid and can be merged")
 
 
