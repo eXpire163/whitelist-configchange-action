@@ -52,7 +52,7 @@ export async function validate(delta: any, filename: string, org:string, repo: s
   console.log("ℹ working with noCheckPath", schemaPath);
   console.log("ℹ current diff is", delta)
 
-  const contentRequest = { owner: org, repo: repo, path: filename }
+  const contentRequest = { owner: org, repo: repo, path: schemaPath }
   const schema = await getContent(contentRequest, octokit)
 
   console.log("ℹ current schema is", schema)

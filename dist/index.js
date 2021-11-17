@@ -73,7 +73,7 @@ function validate(delta, filename, org, repo, octokit) {
         const schemaPath = options.schemaCheck.get(filename);
         console.log("ℹ working with noCheckPath", schemaPath);
         console.log("ℹ current diff is", delta);
-        const contentRequest = { owner: org, repo: repo, path: filename };
+        const contentRequest = { owner: org, repo: repo, path: schemaPath };
         const schema = yield getContent(contentRequest, octokit);
         console.log("ℹ current schema is", schema);
         if ((0, validation_1.validateDiff)(delta, schema)) {
