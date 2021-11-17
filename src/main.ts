@@ -1,7 +1,7 @@
 import * as github from "@actions/github";
 import * as core from '@actions/core';
 import { parse } from 'yaml';
-import { create } from 'jsondiffpatch';
+import { create, formatters } from 'jsondiffpatch';
 import { Buffer } from 'buffer';
 import { getDiffOptions, validateDiff } from "./validation";
 
@@ -10,7 +10,7 @@ const options: Options = {
   noCheckFilesRoot: ["index.js"], //files relative to root
   dynamicFilesCount: 2, //ignored folders starting from root
   noCheckFilesDynamic: ["subbed/namespace.yml"], //filename relative after ignored folders
-  schemaCheck: new Map([[ "dummy.yaml", "schemas/test.schema.json"]]) //xpath (todo) in dynamic folders
+  schemaCheck: new Map([[ "subbed/config.yaml", "schemas/test.schema.json"]]) //xpath (todo) in dynamic folders
 }
 const summery = new Map<string, SummeryDetail>();
 
@@ -30,17 +30,17 @@ type Options = {
 
 async function getContent(contentRequest:any, octokit: any) {
   const resultOld = await octokit.rest.repos.getContent(contentRequest);
-  console.log("oldFileResult: " + resultOld)
+  //console.log("oldFileResult: " + resultOld)
   if (!resultOld) {
-    console.log("old result was empty")
+    //console.log("old result was empty")
     return null
   }
   const contentOld = Buffer.from(resultOld.data.content, 'base64').toString();
-  console.log(contentRequest, contentOld)
+  //console.log(contentRequest, contentOld)
   return parse(contentOld)
 }
 
-export function validate(delta: any, filename: string, org:string, repo: string, octokit: any): SummeryDetail {
+export async function validate(delta: any, filename: string, org:string, repo: string, octokit: any) {
   //is there a whitelist entry
   // todo run schema validation on diff
   if (!options.schemaCheck.has(filename)) {
@@ -52,8 +52,10 @@ export function validate(delta: any, filename: string, org:string, repo: string,
   console.log("ℹ working with noCheckPath", schemaPath);
   console.log("ℹ current diff is", delta)
 
-  const contentRequest = { owner: org, repo: repo, path: filename }
-  const schema = getContent(contentRequest, octokit)
+  const contentRequest = { owner: org, repo: repo, path: schemaPath }
+  const schema = await getContent(contentRequest, octokit)
+
+  console.log("ℹ current schema is", schema)
 
   if(validateDiff(delta, schema)){
     return {result: true, reason: "validation OK"}
@@ -80,7 +82,7 @@ function printSummery() {
 async function run(): Promise<void> {
   try {
 
-    console.log("hi there ⚠");
+    //console.log("hi there ⚠");
 
     //getting base information
     const myToken = core.getInput('myToken');
@@ -108,9 +110,9 @@ async function run(): Promise<void> {
     const pull_number = payload.number
     const filesChanged : number = payload.pull_request.changed_files
 
-    console.log("ℹ this is a pr", repository.owner.login,
-      repository.name,
-      payload.number)
+    // console.log("ℹ this is a pr", repository.owner.login,
+    //   repository.name,
+    //   payload.number)
     //load pr files
     const thisPR = await octokit.rest.pulls.listFiles({
       owner: org,
@@ -132,8 +134,9 @@ async function run(): Promise<void> {
       }
 
       //only allowing yaml/yml files
-      if (filename.endsWith(".yaml") || filename.endsWith(".yml"))
-        console.log("ℹ file is a yml/yaml")
+      if (filename.endsWith(".yaml") || filename.endsWith(".yml")){
+        //console.log("ℹ file is a yml/yaml")
+      }
       else {
         setResult(filename, false, "file is not a yaml")
         continue
@@ -176,10 +179,11 @@ async function run(): Promise<void> {
       // run the compare
       const delta = diffPatcher.diff(jsonOld, jsonNew);
       console.log("ℹ delta", delta)
+
       //console.log(jsonDiffPatch.formatters.console.format(delta))
 
 
-      const result = validate(delta, dynamicPath, org, repo, octokit)
+      const result = await validate(delta, dynamicPath, org, repo, octokit)
       setResult(filename, result.result, result.reason)
 
     }
@@ -196,7 +200,6 @@ async function run(): Promise<void> {
       throw "PR contains changes that are not whitelisted"
 
     }
-
     console.log("all files seem to be valid and can be merged")
 
 

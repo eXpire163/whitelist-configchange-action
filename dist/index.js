@@ -46,38 +46,41 @@ const options = {
     noCheckFilesRoot: ["index.js"],
     dynamicFilesCount: 2,
     noCheckFilesDynamic: ["subbed/namespace.yml"],
-    schemaCheck: new Map([["dummy.yaml", "schemas/test.schema.json"]]) //xpath (todo) in dynamic folders
+    schemaCheck: new Map([["subbed/config.yaml", "schemas/test.schema.json"]]) //xpath (todo) in dynamic folders
 };
 const summery = new Map();
 const diffPatcher = (0, jsondiffpatch_1.create)((0, validation_1.getDiffOptions)());
 function getContent(contentRequest, octokit) {
     return __awaiter(this, void 0, void 0, function* () {
         const resultOld = yield octokit.rest.repos.getContent(contentRequest);
-        console.log("oldFileResult: " + resultOld);
+        //console.log("oldFileResult: " + resultOld)
         if (!resultOld) {
-            console.log("old result was empty");
+            //console.log("old result was empty")
             return null;
         }
         const contentOld = buffer_1.Buffer.from(resultOld.data.content, 'base64').toString();
-        console.log(contentRequest, contentOld);
+        //console.log(contentRequest, contentOld)
         return (0, yaml_1.parse)(contentOld);
     });
 }
 function validate(delta, filename, org, repo, octokit) {
-    //is there a whitelist entry
-    // todo run schema validation on diff
-    if (!options.schemaCheck.has(filename)) {
-        return { result: false, reason: "no noCheckPath found for this file " + filename };
-    }
-    const schemaPath = options.schemaCheck.get(filename);
-    console.log("ℹ working with noCheckPath", schemaPath);
-    console.log("ℹ current diff is", delta);
-    const contentRequest = { owner: org, repo: repo, path: filename };
-    const schema = getContent(contentRequest, octokit);
-    if ((0, validation_1.validateDiff)(delta, schema)) {
-        return { result: true, reason: "validation OK" };
-    }
-    return { result: false, reason: "nothing fit" };
+    return __awaiter(this, void 0, void 0, function* () {
+        //is there a whitelist entry
+        // todo run schema validation on diff
+        if (!options.schemaCheck.has(filename)) {
+            return { result: false, reason: "no noCheckPath found for this file " + filename };
+        }
+        const schemaPath = options.schemaCheck.get(filename);
+        console.log("ℹ working with noCheckPath", schemaPath);
+        console.log("ℹ current diff is", delta);
+        const contentRequest = { owner: org, repo: repo, path: schemaPath };
+        const schema = yield getContent(contentRequest, octokit);
+        console.log("ℹ current schema is", schema);
+        if ((0, validation_1.validateDiff)(delta, schema)) {
+            return { result: true, reason: "validation OK" };
+        }
+        return { result: false, reason: "nothing fit" };
+    });
 }
 exports.validate = validate;
 // ## summery
@@ -94,7 +97,7 @@ function printSummery() {
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            console.log("hi there ⚠");
+            //console.log("hi there ⚠");
             //getting base information
             const myToken = core.getInput('myToken');
             const octokit = github.getOctokit(myToken);
@@ -116,7 +119,9 @@ function run() {
             const repo = repository.name;
             const pull_number = payload.number;
             const filesChanged = payload.pull_request.changed_files;
-            console.log("ℹ this is a pr", repository.owner.login, repository.name, payload.number);
+            // console.log("ℹ this is a pr", repository.owner.login,
+            //   repository.name,
+            //   payload.number)
             //load pr files
             const thisPR = yield octokit.rest.pulls.listFiles({
                 owner: org,
@@ -133,8 +138,9 @@ function run() {
                     continue;
                 }
                 //only allowing yaml/yml files
-                if (filename.endsWith(".yaml") || filename.endsWith(".yml"))
-                    console.log("ℹ file is a yml/yaml");
+                if (filename.endsWith(".yaml") || filename.endsWith(".yml")) {
+                    //console.log("ℹ file is a yml/yaml")
+                }
                 else {
                     setResult(filename, false, "file is not a yaml");
                     continue;
@@ -169,7 +175,7 @@ function run() {
                 const delta = diffPatcher.diff(jsonOld, jsonNew);
                 console.log("ℹ delta", delta);
                 //console.log(jsonDiffPatch.formatters.console.format(delta))
-                const result = validate(delta, dynamicPath, org, repo, octokit);
+                const result = yield validate(delta, dynamicPath, org, repo, octokit);
                 setResult(filename, result.result, result.reason);
             }
             printSummery();
