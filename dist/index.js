@@ -64,21 +64,23 @@ function getContent(contentRequest, octokit) {
     });
 }
 function validate(delta, filename, org, repo, octokit) {
-    //is there a whitelist entry
-    // todo run schema validation on diff
-    if (!options.schemaCheck.has(filename)) {
-        return { result: false, reason: "no noCheckPath found for this file " + filename };
-    }
-    const schemaPath = options.schemaCheck.get(filename);
-    console.log("ℹ working with noCheckPath", schemaPath);
-    console.log("ℹ current diff is", delta);
-    const contentRequest = { owner: org, repo: repo, path: filename };
-    const schema = getContent(contentRequest, octokit);
-    console.log("ℹ current schema is", schema);
-    if ((0, validation_1.validateDiff)(delta, schema)) {
-        return { result: true, reason: "validation OK" };
-    }
-    return { result: false, reason: "nothing fit" };
+    return __awaiter(this, void 0, void 0, function* () {
+        //is there a whitelist entry
+        // todo run schema validation on diff
+        if (!options.schemaCheck.has(filename)) {
+            return { result: false, reason: "no noCheckPath found for this file " + filename };
+        }
+        const schemaPath = options.schemaCheck.get(filename);
+        console.log("ℹ working with noCheckPath", schemaPath);
+        console.log("ℹ current diff is", delta);
+        const contentRequest = { owner: org, repo: repo, path: filename };
+        const schema = yield getContent(contentRequest, octokit);
+        console.log("ℹ current schema is", schema);
+        if ((0, validation_1.validateDiff)(delta, schema)) {
+            return { result: true, reason: "validation OK" };
+        }
+        return { result: false, reason: "nothing fit" };
+    });
 }
 exports.validate = validate;
 // ## summery
@@ -173,7 +175,7 @@ function run() {
                 const delta = diffPatcher.diff(jsonOld, jsonNew);
                 console.log("ℹ delta", delta);
                 //console.log(jsonDiffPatch.formatters.console.format(delta))
-                const result = validate(delta, dynamicPath, org, repo, octokit);
+                const result = yield validate(delta, dynamicPath, org, repo, octokit);
                 setResult(filename, result.result, result.reason);
             }
             printSummery();

@@ -40,7 +40,7 @@ async function getContent(contentRequest:any, octokit: any) {
   return parse(contentOld)
 }
 
-export function validate(delta: any, filename: string, org:string, repo: string, octokit: any): SummeryDetail {
+export async function validate(delta: any, filename: string, org:string, repo: string, octokit: any) {
   //is there a whitelist entry
   // todo run schema validation on diff
   if (!options.schemaCheck.has(filename)) {
@@ -53,7 +53,7 @@ export function validate(delta: any, filename: string, org:string, repo: string,
   console.log("ℹ current diff is", delta)
 
   const contentRequest = { owner: org, repo: repo, path: filename }
-  const schema = getContent(contentRequest, octokit)
+  const schema = await getContent(contentRequest, octokit)
 
   console.log("ℹ current schema is", schema)
 
@@ -183,7 +183,7 @@ async function run(): Promise<void> {
       //console.log(jsonDiffPatch.formatters.console.format(delta))
 
 
-      const result = validate(delta, dynamicPath, org, repo, octokit)
+      const result = await validate(delta, dynamicPath, org, repo, octokit)
       setResult(filename, result.result, result.reason)
 
     }
