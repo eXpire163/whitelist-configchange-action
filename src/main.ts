@@ -59,7 +59,7 @@ async function run(): Promise<void> {
     //   repository.name,
     //   payload.number)
     //load pr files
-    console.log(payload.pull_request)
+
 
     const thisPR = await octokit.rest.pulls.listFiles({
       owner: org,

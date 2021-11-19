@@ -176,7 +176,6 @@ function run() {
             //   repository.name,
             //   payload.number)
             //load pr files
-            console.log(payload.pull_request);
             const thisPR = yield octokit.rest.pulls.listFiles({
                 owner: org,
                 repo: repo,
