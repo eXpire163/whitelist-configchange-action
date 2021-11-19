@@ -225,7 +225,7 @@ function run() {
             }
             console.log("All files could be classified ✔");
             //check if map contains "false" elements
-            const falseMap = new Map([...summery].filter(([k, v]) => v.result == false));
+            const falseMap = new Map([...summery].filter(([, v]) => v.result == false));
             if (falseMap.size > 0) {
                 throw "PR contains changes that are not whitelisted";
             }
