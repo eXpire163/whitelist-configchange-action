@@ -23,7 +23,7 @@ function documentPR(dynamicPath, octokit, org, repo, pull_number, filename) {
             owner: org,
             repo: repo,
             issue_number: pull_number,
-            body: options_1.options.fileDocsDynamic.get(filename) + "",
+            body: options_1.options.fileDocsRoot.get(filename) + "",
         });
     }
 }
