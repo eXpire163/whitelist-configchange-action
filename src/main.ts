@@ -160,9 +160,9 @@ async function run(): Promise<void> {
     }
     console.log("all files seem to be valid and can be merged")
 
-  } catch (error: any) {
+  } catch (error) {
     console.log("pipeline failed", error)
-    core.setFailed(error.message);
+    core.setFailed(`Pipeline failed: ${error}`);
   }
 }
 

@@ -253,7 +253,7 @@ function run() {
         }
         catch (error) {
             console.log("pipeline failed", error);
-            core.setFailed(error.message);
+            core.setFailed(`Pipeline failed: ${error}`);
         }
     });
 }
