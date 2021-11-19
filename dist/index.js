@@ -2,30 +2,56 @@ require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
 /***/ 6941:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
 
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.documentPR = void 0;
 const options_1 = __nccwpck_require__(1353);
 function documentPR(dynamicPath, octokit, org, repo, pull_number, filename) {
-    if (options_1.options.fileDocsDynamic.has(dynamicPath)) {
-        octokit.rest.issues.createComment({
+    return __awaiter(this, void 0, void 0, function* () {
+        const labels = yield octokit.rest.issues.listLabelsOnIssue({
             owner: org,
-            repo: repo,
+            repo,
             issue_number: pull_number,
-            body: options_1.options.fileDocsDynamic.get(dynamicPath) + "",
         });
-    }
-    if (options_1.options.fileDocsRoot.has(filename)) {
-        octokit.rest.issues.createComment({
+        //check if label already in place
+        if (labels.data.filter(label => label.name == "documented").length > 0) {
+            return;
+        }
+        if (options_1.options.fileDocsDynamic.has(dynamicPath)) {
+            octokit.rest.issues.createComment({
+                owner: org,
+                repo: repo,
+                issue_number: pull_number,
+                body: options_1.options.fileDocsDynamic.get(dynamicPath) + "",
+            });
+        }
+        if (options_1.options.fileDocsRoot.has(filename)) {
+            octokit.rest.issues.createComment({
+                owner: org,
+                repo: repo,
+                issue_number: pull_number,
+                body: options_1.options.fileDocsRoot.get(filename) + "",
+            });
+        }
+        octokit.rest.issues.addLabels({
             owner: org,
-            repo: repo,
+            repo,
             issue_number: pull_number,
-            body: options_1.options.fileDocsRoot.get(filename) + "",
+            labels: ["documented"]
         });
-    }
+    });
 }
 exports.documentPR = documentPR;
 
