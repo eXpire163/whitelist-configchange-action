@@ -1,10 +1,11 @@
-import { options } from "./main";
+import { options } from "./options";
 import { getContent } from "./getContent";
 import Ajv2019 from "../node_modules/ajv/dist/2019";
 import addFormats from 'ajv-formats';
+import { OctoType } from "./types/OctoType";
 
 
-export async function validate(delta: any, filename: string, org: string, repo: string, octokit: any) {
+export async function validate(delta: never, filename: string, org: string, repo: string, octokit: OctoType) {
     //is there a whitelist entry
     // todo run schema validation on diff
     if (!options.schemaCheck.has(filename)) {
@@ -15,14 +16,13 @@ export async function validate(delta: any, filename: string, org: string, repo: 
     console.log("ℹ current diff is", delta);
 
     const contentRequest = { owner: org, repo: repo, path: schemaPath };
-    const schema = await getContent(contentRequest, octokit);
+    const schema = await getContent(contentRequest, octokit) as never;
 
     console.log("ℹ current schema is", schema);
 
     if (validateDiff(delta, schema)) {
         return { result: true, reason: "validation OK" };
     }
-
     return { result: false, reason: "nothing fit" };
 }
 
@@ -61,7 +61,7 @@ export function getDiffOptions(){
 
 
 
-export function validateDiff(diff: any, schema: any){
+export function validateDiff(diff: never, schema: never){
 
     //const common_schema = require("./common_types.schema.json")
     const ajv = new Ajv2019({ allErrors: true, messages: true })

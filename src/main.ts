@@ -4,21 +4,12 @@ import { create } from 'jsondiffpatch';
 import { getDiffOptions, validate } from "./validation";
 import { documentPR } from "./documentPR";
 import { getContent } from "./getContent";
-import { Options } from "./types/Options";
 import { SummeryDetail } from "./types/SummeryDetail";
+import { options } from "./options";
+import {OctoType} from "./types/OctoType"
 
 
-export const options: Options = {
-  noCheckFilesRoot: ["src/main.ts", "dist/index.js", "dist/index.js.map", "dist/licenses.txt", "dist/sourcemap-register.js", "package-lock.json", "package.json"], //files relative to root
-  dynamicFilesCount: 2, //ignored folders starting from root
-  noCheckFilesDynamic: ["subbed/namespace.yml"], //filename relative after ignored folders
-  schemaCheck: new Map([[ "subbed/config.yaml", "schemas/test.schema.json"]]), //xpath (todo) in dynamic folders
-  fileDocsRoot: new Map([["src/main.ts", "Hope you know that you are changing the pipeline!!!"]]),
-  fileDocsDynamic: new Map([["subbed/namespace.yml", "Have you checked your available resources to handle your namespace change?"]])
-
-}
 const summery = new Map<string, SummeryDetail>();
-
 const diffPatcher = create(getDiffOptions());
 
 // ## summery
@@ -40,7 +31,7 @@ async function run(): Promise<void> {
 
     //getting base information
     const myToken = core.getInput('myToken');
-    const octokit = github.getOctokit(myToken)
+    const octokit = github.getOctokit(myToken) as OctoType
     const context = github.context;
 
 
@@ -142,7 +133,7 @@ async function run(): Promise<void> {
       }
 
       // run the compare
-      const delta = diffPatcher.diff(jsonOld, jsonNew);
+      const delta = diffPatcher.diff(jsonOld, jsonNew) as never;
       console.log("ℹ delta", delta)
 
       //console.log(jsonDiffPatch.formatters.console.format(delta))

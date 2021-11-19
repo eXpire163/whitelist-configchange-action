@@ -6,21 +6,20 @@
 import {expect, test} from '@jest/globals'
 import {load} from 'js-yaml'
 
-import {validate} from '../src/main'
+import {validate} from '../src/validation'
 
 
 import { readFile } from "fs/promises";
 
-test('validation', () => {
+test('validation', async () => {
     const filepath = "data/sub/subbed/config.yaml"
     const yaml = load(await readFile(filepath, "utf8"))
 
     const filepathChanged = "data/sub/subbed/configChanged.yaml"
     const yamlChanged = load(await readFile(filepathChanged, "utf8"))
 
-
-
-}
+    //expect.length( await validate(diff, "test.schema.json", "test", "test", null))
+})
 // test('throws invalid number', async () => {
 //   const input = parseInt('foo', 10)
 //   await expect(wait(input)).rejects.toThrow('milliseconds not a number')

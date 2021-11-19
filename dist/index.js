@@ -8,22 +8,22 @@ require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.documentPR = void 0;
-const main_1 = __nccwpck_require__(3109);
+const options_1 = __nccwpck_require__(1353);
 function documentPR(dynamicPath, octokit, org, repo, pull_number, filename) {
-    if (main_1.options.fileDocsDynamic.has(dynamicPath)) {
+    if (options_1.options.fileDocsDynamic.has(dynamicPath)) {
         octokit.rest.issues.createComment({
             owner: org,
             repo: repo,
             issue_number: pull_number,
-            body: main_1.options.fileDocsDynamic.get(dynamicPath) + "",
+            body: options_1.options.fileDocsDynamic.get(dynamicPath) + "",
         });
     }
-    if (main_1.options.fileDocsRoot.has(filename)) {
+    if (options_1.options.fileDocsRoot.has(filename)) {
         octokit.rest.issues.createComment({
             owner: org,
             repo: repo,
             issue_number: pull_number,
-            body: main_1.options.fileDocsDynamic.get(filename) + "",
+            body: options_1.options.fileDocsDynamic.get(filename) + "",
         });
     }
 }
@@ -102,21 +102,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.options = void 0;
 const github = __importStar(__nccwpck_require__(5438));
 const core = __importStar(__nccwpck_require__(2186));
 const jsondiffpatch_1 = __nccwpck_require__(8468);
 const validation_1 = __nccwpck_require__(581);
 const documentPR_1 = __nccwpck_require__(6941);
 const getContent_1 = __nccwpck_require__(8463);
-exports.options = {
-    noCheckFilesRoot: ["src/main.ts", "dist/index.js", "dist/index.js.map", "dist/licenses.txt", "dist/sourcemap-register.js", "package-lock.json", "package.json"],
-    dynamicFilesCount: 2,
-    noCheckFilesDynamic: ["subbed/namespace.yml"],
-    schemaCheck: new Map([["subbed/config.yaml", "schemas/test.schema.json"]]),
-    fileDocsRoot: new Map([["src/main.ts", "Hope you know that you are changing the pipeline!!!"]]),
-    fileDocsDynamic: new Map([["subbed/namespace.yml", "Have you checked your available resources to handle your namespace change?"]])
-};
+const options_1 = __nccwpck_require__(1353);
 const summery = new Map();
 const diffPatcher = (0, jsondiffpatch_1.create)((0, validation_1.getDiffOptions)());
 // ## summery
@@ -171,20 +163,20 @@ function run() {
                 //ignore the first x folders in the path - like project name that could change
                 //techdebt - make it smarter
                 let dynamicPath = filename;
-                for (let i = 0; i < exports.options.dynamicFilesCount; i++) {
+                for (let i = 0; i < options_1.options.dynamicFilesCount; i++) {
                     dynamicPath = dynamicPath.substring(dynamicPath.indexOf('/') + 1);
                 }
                 //document PR
                 (0, documentPR_1.documentPR)(dynamicPath, octokit, org, repo, pull_number, filename);
                 // whitelisted files
                 //console.log("DEBUG: whitelist check root", filename, options.noCheckFilesRoot);
-                if (exports.options.noCheckFilesRoot.includes(filename)) {
+                if (options_1.options.noCheckFilesRoot.includes(filename)) {
                     //console.log("DEBUG: file in whitelist", filename)
                     setResult(filename, true, "part of noCheckFilesRoot");
                     continue;
                 }
                 //console.log("DEBUG: whitelist check dynamic", dynamicPath, options.noCheckFilesDynamic);
-                if (exports.options.noCheckFilesDynamic.includes(dynamicPath)) {
+                if (options_1.options.noCheckFilesDynamic.includes(dynamicPath)) {
                     setResult(filename, true, "part of noCheckFilesDynamic");
                     continue;
                 }
@@ -242,6 +234,25 @@ run();
 
 /***/ }),
 
+/***/ 1353:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.options = void 0;
+exports.options = {
+    noCheckFilesRoot: ["src/main.ts", "dist/index.js", "dist/index.js.map", "dist/licenses.txt", "dist/sourcemap-register.js", "package-lock.json", "package.json"],
+    dynamicFilesCount: 2,
+    noCheckFilesDynamic: ["subbed/namespace.yml"],
+    schemaCheck: new Map([["subbed/config.yaml", "schemas/test.schema.json"]]),
+    fileDocsRoot: new Map([["src/main.ts", "Hope you know that you are changing the pipeline!!!"]]),
+    fileDocsDynamic: new Map([["subbed/namespace.yml", "Have you checked your available resources to handle your namespace change?"]])
+};
+
+
+/***/ }),
+
 /***/ 581:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -261,7 +272,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.validateDiff = exports.getDiffOptions = exports.validate = void 0;
-const main_1 = __nccwpck_require__(3109);
+const options_1 = __nccwpck_require__(1353);
 const getContent_1 = __nccwpck_require__(8463);
 const _2019_1 = __importDefault(__nccwpck_require__(5988));
 const ajv_formats_1 = __importDefault(__nccwpck_require__(567));
@@ -269,10 +280,10 @@ function validate(delta, filename, org, repo, octokit) {
     return __awaiter(this, void 0, void 0, function* () {
         //is there a whitelist entry
         // todo run schema validation on diff
-        if (!main_1.options.schemaCheck.has(filename)) {
+        if (!options_1.options.schemaCheck.has(filename)) {
             return { result: false, reason: "no noCheckPath found for this file " + filename };
         }
-        const schemaPath = main_1.options.schemaCheck.get(filename);
+        const schemaPath = options_1.options.schemaCheck.get(filename);
         console.log("ℹ working with noCheckPath", schemaPath);
         console.log("ℹ current diff is", delta);
         const contentRequest = { owner: org, repo: repo, path: schemaPath };
