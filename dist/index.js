@@ -28,6 +28,7 @@ function documentPR(dynamicPath, octokit, owner, repo, issue_number, filename) {
         });
         //check if label already in place
         if (labels.data.filter(label => label.name == docLabel).length > 0) {
+            console.log("will not document, as already done");
             return;
         }
         if (options_1.options.fileDocsDynamic.has(dynamicPath)) {
