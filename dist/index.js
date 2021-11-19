@@ -18,12 +18,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.documentPR = void 0;
 const options_1 = __nccwpck_require__(1353);
-function documentPR(dynamicPath, octokit, org, repo, pull_number, filename) {
+function documentPR(dynamicPath, octokit, owner, repo, issue_number, filename) {
     return __awaiter(this, void 0, void 0, function* () {
         const labels = yield octokit.rest.issues.listLabelsOnIssue({
-            owner: org,
+            owner,
             repo,
-            issue_number: pull_number,
+            issue_number,
         });
         //check if label already in place
         if (labels.data.filter(label => label.name == "documented").length > 0) {
@@ -31,24 +31,24 @@ function documentPR(dynamicPath, octokit, org, repo, pull_number, filename) {
         }
         if (options_1.options.fileDocsDynamic.has(dynamicPath)) {
             octokit.rest.issues.createComment({
-                owner: org,
+                owner,
                 repo: repo,
-                issue_number: pull_number,
+                issue_number,
                 body: options_1.options.fileDocsDynamic.get(dynamicPath) + "",
             });
         }
         if (options_1.options.fileDocsRoot.has(filename)) {
             octokit.rest.issues.createComment({
-                owner: org,
+                owner,
                 repo: repo,
-                issue_number: pull_number,
+                issue_number,
                 body: options_1.options.fileDocsRoot.get(filename) + "",
             });
         }
         octokit.rest.issues.addLabels({
-            owner: org,
+            owner,
             repo,
-            issue_number: pull_number,
+            issue_number,
             labels: ["documented"]
         });
     });
