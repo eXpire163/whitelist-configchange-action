@@ -7,7 +7,7 @@ import { getDiffOptions, validateDiff } from "./validation";
 
 
 const options: Options = {
-  noCheckFilesRoot: ["src/main.ts", "dist/index.js", "dist/index.js.map", "dist/licenses.txt", "dist/sourcemap-register.js"], //files relative to root
+  noCheckFilesRoot: ["src/main.ts", "dist/index.js", "dist/index.js.map", "dist/licenses.txt", "dist/sourcemap-register.js", "package-lock.json", "package.json"], //files relative to root
   dynamicFilesCount: 2, //ignored folders starting from root
   noCheckFilesDynamic: ["subbed/namespace.yml"], //filename relative after ignored folders
   schemaCheck: new Map([[ "subbed/config.yaml", "schemas/test.schema.json"]]), //xpath (todo) in dynamic folders
@@ -143,6 +143,8 @@ async function run(): Promise<void> {
         dynamicPath = dynamicPath.substring(dynamicPath.indexOf('/') + 1)
       }
 
+
+      //document PR
       if (options.fileDocsDynamic.has(dynamicPath)){
         octokit.rest.issues.createComment({
           owner: org,

@@ -43,7 +43,7 @@ const jsondiffpatch_1 = __nccwpck_require__(8468);
 const buffer_1 = __nccwpck_require__(4293);
 const validation_1 = __nccwpck_require__(581);
 const options = {
-    noCheckFilesRoot: ["src/main.ts", "dist/index.js", "dist/index.js.map", "dist/licenses.txt", "dist/sourcemap-register.js"],
+    noCheckFilesRoot: ["src/main.ts", "dist/index.js", "dist/index.js.map", "dist/licenses.txt", "dist/sourcemap-register.js", "package-lock.json", "package.json"],
     dynamicFilesCount: 2,
     noCheckFilesDynamic: ["subbed/namespace.yml"],
     schemaCheck: new Map([["subbed/config.yaml", "schemas/test.schema.json"]]),
@@ -141,6 +141,7 @@ function run() {
                 for (let i = 0; i < options.dynamicFilesCount; i++) {
                     dynamicPath = dynamicPath.substring(dynamicPath.indexOf('/') + 1);
                 }
+                //document PR
                 if (options.fileDocsDynamic.has(dynamicPath)) {
                     octokit.rest.issues.createComment({
                         owner: org,
