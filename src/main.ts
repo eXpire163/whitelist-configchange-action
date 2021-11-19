@@ -70,6 +70,7 @@ async function run(): Promise<void> {
 
     //check if PR is documented
     const isPrDocumented = isDocumentPR(octokit, org, repo, pull_number)
+    console.log("DEBUG: isPrDocumented", isPrDocumented)
 
 
 

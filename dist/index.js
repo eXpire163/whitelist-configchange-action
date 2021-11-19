@@ -18,7 +18,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.documentPR = exports.isDocumentPR = void 0;
 const options_1 = __nccwpck_require__(1353);
-const docLabel = "bot/documented";
 function isDocumentPR(octokit, owner, repo, issue_number) {
     return __awaiter(this, void 0, void 0, function* () {
         const labels = yield octokit.rest.issues.listLabelsOnIssue({
@@ -27,7 +26,7 @@ function isDocumentPR(octokit, owner, repo, issue_number) {
             issue_number,
         });
         //check if label already in place
-        return labels.data.filter(label => label.name == docLabel).length > 0;
+        return labels.data.filter(label => label.name == options_1.options.docLabel).length > 0;
     });
 }
 exports.isDocumentPR = isDocumentPR;
@@ -53,7 +52,7 @@ function documentPR(dynamicPath, octokit, owner, repo, issue_number, filename) {
             owner,
             repo,
             issue_number,
-            labels: [docLabel]
+            labels: [options_1.options.docLabel]
         });
     });
 }
@@ -188,6 +187,7 @@ function run() {
             const files = thisPR.data;
             //check if PR is documented
             const isPrDocumented = (0, documentPR_1.isDocumentPR)(octokit, org, repo, pull_number);
+            console.log("DEBUG: isPrDocumented", isPrDocumented);
             //iterating over changed files
             for (const file of files) {
                 const filename = file.filename;
@@ -280,7 +280,8 @@ exports.options = {
     noCheckFilesDynamic: ["subbed/namespace.yml"],
     schemaCheck: new Map([["subbed/config.yaml", "schemas/test.schema.json"]]),
     fileDocsRoot: new Map([["src/main.ts", "Hope you know that you are changing the pipeline!!!"]]),
-    fileDocsDynamic: new Map([["subbed/namespace.yml", "Have you checked your available resources to handle your namespace change?"]])
+    fileDocsDynamic: new Map([["subbed/namespace.yml", "Have you checked your available resources to handle your namespace change?"]]),
+    docLabel: "bot/documented"
 };
 
 
