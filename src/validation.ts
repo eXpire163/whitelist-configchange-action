@@ -1,3 +1,31 @@
+import { options, getContent } from "./main";
+import Ajv2019 from "../node_modules/ajv/dist/2019";
+import addFormats from 'ajv-formats';
+
+
+export async function validate(delta: any, filename: string, org: string, repo: string, octokit: any) {
+    //is there a whitelist entry
+    // todo run schema validation on diff
+    if (!options.schemaCheck.has(filename)) {
+        return { result: false, reason: "no noCheckPath found for this file " + filename };
+    }
+    const schemaPath = options.schemaCheck.get(filename);
+    console.log("ℹ working with noCheckPath", schemaPath);
+    console.log("ℹ current diff is", delta);
+
+    const contentRequest = { owner: org, repo: repo, path: schemaPath };
+    const schema = await getContent(contentRequest, octokit);
+
+    console.log("ℹ current schema is", schema);
+
+    if (validateDiff(delta, schema)) {
+        return { result: true, reason: "validation OK" };
+    }
+
+    return { result: false, reason: "nothing fit" };
+}
+
+
 export function getDiffOptions(){
     return {
         // used to match objects when diffing arrays, by default only === operator is used
@@ -30,8 +58,7 @@ export function getDiffOptions(){
     }
 }
 
-import Ajv2019 from "../node_modules/ajv/dist/2019";
-import addFormats from 'ajv-formats';
+
 
 export function validateDiff(diff: any, schema: any){
 

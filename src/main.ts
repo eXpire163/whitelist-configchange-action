@@ -1,12 +1,13 @@
 import * as github from "@actions/github";
 import * as core from '@actions/core';
 import { parse } from 'yaml';
-import { create, formatters } from 'jsondiffpatch';
+import { create } from 'jsondiffpatch';
 import { Buffer } from 'buffer';
-import { getDiffOptions, validateDiff } from "./validation";
+import { getDiffOptions, validate } from "./validation";
+import { documentPR } from "./documentPR";
 
 
-const options: Options = {
+export const options: Options = {
   noCheckFilesRoot: ["src/main.ts", "dist/index.js", "dist/index.js.map", "dist/licenses.txt", "dist/sourcemap-register.js", "package-lock.json", "package.json"], //files relative to root
   dynamicFilesCount: 2, //ignored folders starting from root
   noCheckFilesDynamic: ["subbed/namespace.yml"], //filename relative after ignored folders
@@ -33,7 +34,7 @@ type Options = {
 }
 
 
-async function getContent(contentRequest:any, octokit: any) {
+export async function getContent(contentRequest:any, octokit: any) {
   const resultOld = await octokit.rest.repos.getContent(contentRequest);
   //console.log("oldFileResult: " + resultOld)
   if (!resultOld) {
@@ -44,32 +45,6 @@ async function getContent(contentRequest:any, octokit: any) {
   //console.log(contentRequest, contentOld)
   return parse(contentOld)
 }
-
-export async function validate(delta: any, filename: string, org:string, repo: string, octokit: any) {
-  //is there a whitelist entry
-  // todo run schema validation on diff
-  if (!options.schemaCheck.has(filename)) {
-    return { result: false, reason: "no noCheckPath found for this file " + filename }
-  }
-
-
-  const schemaPath = options.schemaCheck.get(filename)
-  console.log("ℹ working with noCheckPath", schemaPath);
-  console.log("ℹ current diff is", delta)
-
-  const contentRequest = { owner: org, repo: repo, path: schemaPath }
-  const schema = await getContent(contentRequest, octokit)
-
-  console.log("ℹ current schema is", schema)
-
-  if(validateDiff(delta, schema)){
-    return {result: true, reason: "validation OK"}
-  }
-
-  return { result: false, reason: "nothing fit" }
-}
-
-
 
 // ## summery
 function setResult(filename: string, result: boolean, reason:string) {
@@ -83,7 +58,6 @@ function printSummery() {
 }
 
 
-// most @actions toolkit packages have async methods
 async function run(): Promise<void> {
   try {
 
@@ -145,23 +119,7 @@ async function run(): Promise<void> {
 
 
       //document PR
-      if (options.fileDocsDynamic.has(dynamicPath)){
-        octokit.rest.issues.createComment({
-          owner: org,
-          repo: repo,
-          issue_number: pull_number,
-          body: options.fileDocsDynamic.get(dynamicPath)+"",
-        });
-      }
-
-      if (options.fileDocsRoot.has(filename)) {
-        octokit.rest.issues.createComment({
-          owner: org,
-          repo: repo,
-          issue_number: pull_number,
-          body: options.fileDocsDynamic.get(filename) + "",
-        });
-      }
+      documentPR(dynamicPath, octokit, org, repo, pull_number, filename);
 
       // whitelisted files
       //console.log("DEBUG: whitelist check root", filename, options.noCheckFilesRoot);
