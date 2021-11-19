@@ -16,21 +16,23 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.documentPR = void 0;
+exports.documentPR = exports.isDocumentPR = void 0;
 const options_1 = __nccwpck_require__(1353);
-function documentPR(dynamicPath, octokit, owner, repo, issue_number, filename) {
+const docLabel = "bot/documented";
+function isDocumentPR(octokit, owner, repo, issue_number) {
     return __awaiter(this, void 0, void 0, function* () {
-        const docLabel = "bot/documented";
         const labels = yield octokit.rest.issues.listLabelsOnIssue({
             owner,
             repo,
             issue_number,
         });
         //check if label already in place
-        if (labels.data.filter(label => label.name == docLabel).length > 0) {
-            console.log("will not document, as already done");
-            return;
-        }
+        return labels.data.filter(label => label.name == docLabel).length > 0;
+    });
+}
+exports.isDocumentPR = isDocumentPR;
+function documentPR(dynamicPath, octokit, owner, repo, issue_number, filename) {
+    return __awaiter(this, void 0, void 0, function* () {
         if (options_1.options.fileDocsDynamic.has(dynamicPath)) {
             octokit.rest.issues.createComment({
                 owner,
@@ -184,6 +186,8 @@ function run() {
                 pull_number: pull_number
             });
             const files = thisPR.data;
+            //check if PR is documented
+            const isPrDocumented = (0, documentPR_1.isDocumentPR)(octokit, org, repo, pull_number);
             //iterating over changed files
             for (const file of files) {
                 const filename = file.filename;
@@ -195,7 +199,8 @@ function run() {
                     dynamicPath = dynamicPath.substring(dynamicPath.indexOf('/') + 1);
                 }
                 //document PR
-                (0, documentPR_1.documentPR)(dynamicPath, octokit, org, repo, pull_number, filename);
+                if (!isPrDocumented)
+                    (0, documentPR_1.documentPR)(dynamicPath, octokit, org, repo, pull_number, filename);
                 // whitelisted files
                 //console.log("DEBUG: whitelist check root", filename, options.noCheckFilesRoot);
                 if (options_1.options.noCheckFilesRoot.includes(filename)) {

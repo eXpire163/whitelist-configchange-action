@@ -2,7 +2,7 @@ import * as github from "@actions/github";
 import * as core from '@actions/core';
 import { create } from 'jsondiffpatch';
 import { getDiffOptions, validate } from "./validation";
-import { documentPR } from "./documentPR";
+import { documentPR, isDocumentPR } from "./documentPR";
 import { getContent } from "./getContent";
 import { SummeryDetail } from "./types/SummeryDetail";
 import { options } from "./options";
@@ -68,8 +68,12 @@ async function run(): Promise<void> {
     });
     const files = thisPR.data
 
-    //iterating over changed files
+    //check if PR is documented
+    const isPrDocumented = isDocumentPR(octokit, org, repo, pull_number)
 
+
+
+     //iterating over changed files
     for (const file of files) {
 
       const filename = file.filename
@@ -87,7 +91,8 @@ async function run(): Promise<void> {
 
 
       //document PR
-      documentPR(dynamicPath, octokit, org, repo, pull_number, filename);
+      if (!isPrDocumented)
+        documentPR(dynamicPath, octokit, org, repo, pull_number, filename);
 
       // whitelisted files
       //console.log("DEBUG: whitelist check root", filename, options.noCheckFilesRoot);
