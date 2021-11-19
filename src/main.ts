@@ -162,10 +162,12 @@ async function run(): Promise<void> {
       }
 
       // whitelisted files
+      console.log("DEBUG: whitelist check root", filename, options.noCheckFilesRoot);
       if (filename in options.noCheckFilesRoot) {
         setResult(filename, true, "part of noCheckFilesRoot")
         continue
       }
+      console.log("DEBUG: whitelist check dynamic", filename, options.noCheckFilesDynamic);
       if (dynamicPath in options.noCheckFilesDynamic) {
         setResult(filename, true, "part of noCheckFilesDynamic")
         continue
