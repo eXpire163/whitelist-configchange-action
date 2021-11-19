@@ -47,7 +47,7 @@ const options = {
     dynamicFilesCount: 2,
     noCheckFilesDynamic: ["subbed/namespace.yml"],
     schemaCheck: new Map([["subbed/config.yaml", "schemas/test.schema.json"]]),
-    fileDocsRoot: new Map([["index.js", "Hope you know that you are changeing the pipeline!!!"]]),
+    fileDocsRoot: new Map([["src/main.ts", "Hope you know that you are changeing the pipeline!!!"]]),
     fileDocsDynamic: new Map([["subbed/namespace.yml", "Have you checked your available resources to handle your namespace change?"]])
 };
 const summery = new Map();

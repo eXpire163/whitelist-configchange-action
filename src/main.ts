@@ -11,7 +11,7 @@ const options: Options = {
   dynamicFilesCount: 2, //ignored folders starting from root
   noCheckFilesDynamic: ["subbed/namespace.yml"], //filename relative after ignored folders
   schemaCheck: new Map([[ "subbed/config.yaml", "schemas/test.schema.json"]]), //xpath (todo) in dynamic folders
-  fileDocsRoot: new Map([["index.js", "Hope you know that you are changeing the pipeline!!!"]]),
+  fileDocsRoot: new Map([["src/main.ts", "Hope you know that you are changeing the pipeline!!!"]]),
   fileDocsDynamic: new Map([["subbed/namespace.yml", "Have you checked your available resources to handle your namespace change?"]])
 
 }
