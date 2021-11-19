@@ -47,7 +47,7 @@ const options = {
     dynamicFilesCount: 2,
     noCheckFilesDynamic: ["subbed/namespace.yml"],
     schemaCheck: new Map([["subbed/config.yaml", "schemas/test.schema.json"]]),
-    fileDocsRoot: new Map([["src/main.ts", "Hope you know that you are changeing the pipeline!!!"]]),
+    fileDocsRoot: new Map([["src/main.ts", "Hope you know that you are changing the pipeline!!!"]]),
     fileDocsDynamic: new Map([["subbed/namespace.yml", "Have you checked your available resources to handle your namespace change?"]])
 };
 const summery = new Map();
@@ -134,19 +134,6 @@ function run() {
             //iterating over changed files
             for (const file of files) {
                 const filename = file.filename;
-                // create or delete can not be merged automatically
-                if (file.status != "modified") {
-                    setResult(filename, false, "file is new or deleted");
-                    continue;
-                }
-                //only allowing yaml/yml files
-                if (filename.endsWith(".yaml") || filename.endsWith(".yml")) {
-                    //console.log("ℹ file is a yml/yaml")
-                }
-                else {
-                    setResult(filename, false, "file is not a yaml");
-                    continue;
-                }
                 //check for noCheckFiles (whitelist)
                 //ignore the first x folders in the path - like project name that could change
                 //techdebt - make it smarter
@@ -170,12 +157,26 @@ function run() {
                         body: options.fileDocsDynamic.get(filename) + "",
                     });
                 }
+                // whitelisted files
                 if (filename in options.noCheckFilesRoot) {
                     setResult(filename, true, "part of noCheckFilesRoot");
                     continue;
                 }
                 if (dynamicPath in options.noCheckFilesDynamic) {
                     setResult(filename, true, "part of noCheckFilesDynamic");
+                    continue;
+                }
+                // create or delete can not be merged automatically
+                if (file.status != "modified") {
+                    setResult(filename, false, "file is new or deleted");
+                    continue;
+                }
+                //only allowing yaml/yml files
+                if (filename.endsWith(".yaml") || filename.endsWith(".yml")) {
+                    //console.log("ℹ file is a yml/yaml")
+                }
+                else {
+                    setResult(filename, false, "file is not a yaml");
                     continue;
                 }
                 // compare content of yaml files
