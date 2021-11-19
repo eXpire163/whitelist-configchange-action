@@ -187,6 +187,7 @@ function run() {
             const files = thisPR.data;
             //check if PR is documented
             const isPrDocumented = (0, documentPR_1.isDocumentPR)(octokit, org, repo, pull_number);
+            console.log("DEBUG: isPrDocumented", isPrDocumented);
             //iterating over changed files
             for (const file of files) {
                 const filename = file.filename;
