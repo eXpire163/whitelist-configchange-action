@@ -20,13 +20,14 @@ exports.documentPR = void 0;
 const options_1 = __nccwpck_require__(1353);
 function documentPR(dynamicPath, octokit, owner, repo, issue_number, filename) {
     return __awaiter(this, void 0, void 0, function* () {
+        const docLabel = "bot/documented";
         const labels = yield octokit.rest.issues.listLabelsOnIssue({
             owner,
             repo,
             issue_number,
         });
         //check if label already in place
-        if (labels.data.filter(label => label.name == "documented").length > 0) {
+        if (labels.data.filter(label => label.name == docLabel).length > 0) {
             return;
         }
         if (options_1.options.fileDocsDynamic.has(dynamicPath)) {
@@ -49,7 +50,7 @@ function documentPR(dynamicPath, octokit, owner, repo, issue_number, filename) {
             owner,
             repo,
             issue_number,
-            labels: ["documented"]
+            labels: [docLabel]
         });
     });
 }
