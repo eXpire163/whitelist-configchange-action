@@ -7,7 +7,7 @@ import { getDiffOptions, validateDiff } from "./validation";
 
 
 const options: Options = {
-  noCheckFilesRoot: ["index.js"], //files relative to root
+  noCheckFilesRoot: ["src/main.ts", "dist/index.js", "dist/index.js.map", "dist/licenses.txt", "dist/sourcemap-register.js"], //files relative to root
   dynamicFilesCount: 2, //ignored folders starting from root
   noCheckFilesDynamic: ["subbed/namespace.yml"], //filename relative after ignored folders
   schemaCheck: new Map([[ "subbed/config.yaml", "schemas/test.schema.json"]]), //xpath (todo) in dynamic folders
