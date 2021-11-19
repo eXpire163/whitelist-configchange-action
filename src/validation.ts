@@ -1,4 +1,5 @@
-import { options, getContent } from "./main";
+import { options } from "./main";
+import { getContent } from "./getContent";
 import Ajv2019 from "../node_modules/ajv/dist/2019";
 import addFormats from 'ajv-formats';
 

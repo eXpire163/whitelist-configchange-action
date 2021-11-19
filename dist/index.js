@@ -32,6 +32,42 @@ exports.documentPR = documentPR;
 
 /***/ }),
 
+/***/ 8463:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getContent = void 0;
+const yaml_1 = __nccwpck_require__(3552);
+const buffer_1 = __nccwpck_require__(4293);
+function getContent(contentRequest, octokit) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const resultOld = yield octokit.rest.repos.getContent(contentRequest);
+        //console.log("oldFileResult: " + resultOld)
+        if (!resultOld) {
+            //console.log("old result was empty")
+            return null;
+        }
+        const contentOld = buffer_1.Buffer.from(resultOld.data.content, 'base64').toString();
+        //console.log(contentRequest, contentOld)
+        return (0, yaml_1.parse)(contentOld);
+    });
+}
+exports.getContent = getContent;
+
+
+/***/ }),
+
 /***/ 3109:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -66,14 +102,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getContent = exports.options = void 0;
+exports.options = void 0;
 const github = __importStar(__nccwpck_require__(5438));
 const core = __importStar(__nccwpck_require__(2186));
-const yaml_1 = __nccwpck_require__(3552);
 const jsondiffpatch_1 = __nccwpck_require__(8468);
-const buffer_1 = __nccwpck_require__(4293);
 const validation_1 = __nccwpck_require__(581);
 const documentPR_1 = __nccwpck_require__(6941);
+const getContent_1 = __nccwpck_require__(8463);
 exports.options = {
     noCheckFilesRoot: ["src/main.ts", "dist/index.js", "dist/index.js.map", "dist/licenses.txt", "dist/sourcemap-register.js", "package-lock.json", "package.json"],
     dynamicFilesCount: 2,
@@ -84,20 +119,6 @@ exports.options = {
 };
 const summery = new Map();
 const diffPatcher = (0, jsondiffpatch_1.create)((0, validation_1.getDiffOptions)());
-function getContent(contentRequest, octokit) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const resultOld = yield octokit.rest.repos.getContent(contentRequest);
-        //console.log("oldFileResult: " + resultOld)
-        if (!resultOld) {
-            //console.log("old result was empty")
-            return null;
-        }
-        const contentOld = buffer_1.Buffer.from(resultOld.data.content, 'base64').toString();
-        //console.log(contentRequest, contentOld)
-        return (0, yaml_1.parse)(contentOld);
-    });
-}
-exports.getContent = getContent;
 // ## summery
 function setResult(filename, result, reason) {
     summery.set(filename, { result: result, reason: reason });
@@ -183,10 +204,10 @@ function run() {
                 // compare content of yaml files
                 //get master
                 const contentRequestOld = { owner: org, repo: repo, path: filename };
-                const jsonOld = yield getContent(contentRequestOld, octokit);
+                const jsonOld = yield (0, getContent_1.getContent)(contentRequestOld, octokit);
                 //get current
                 const contentRequestNew = { owner: org, repo: repo, path: filename, ref: payload.pull_request.head.ref };
-                const jsonNew = yield getContent(contentRequestNew, octokit);
+                const jsonNew = yield (0, getContent_1.getContent)(contentRequestNew, octokit);
                 //check if both have valid content
                 if (jsonOld == null || jsonNew == null) {
                     setResult(filename, false, "could not read file content");
@@ -241,6 +262,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.validateDiff = exports.getDiffOptions = exports.validate = void 0;
 const main_1 = __nccwpck_require__(3109);
+const getContent_1 = __nccwpck_require__(8463);
 const _2019_1 = __importDefault(__nccwpck_require__(5988));
 const ajv_formats_1 = __importDefault(__nccwpck_require__(567));
 function validate(delta, filename, org, repo, octokit) {
@@ -254,7 +276,7 @@ function validate(delta, filename, org, repo, octokit) {
         console.log("ℹ working with noCheckPath", schemaPath);
         console.log("ℹ current diff is", delta);
         const contentRequest = { owner: org, repo: repo, path: schemaPath };
-        const schema = yield (0, main_1.getContent)(contentRequest, octokit);
+        const schema = yield (0, getContent_1.getContent)(contentRequest, octokit);
         console.log("ℹ current schema is", schema);
         if (validateDiff(delta, schema)) {
             return { result: true, reason: "validation OK" };

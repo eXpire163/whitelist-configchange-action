@@ -1,10 +1,11 @@
 import * as github from "@actions/github";
 import * as core from '@actions/core';
-import { parse } from 'yaml';
 import { create } from 'jsondiffpatch';
-import { Buffer } from 'buffer';
 import { getDiffOptions, validate } from "./validation";
 import { documentPR } from "./documentPR";
+import { getContent } from "./getContent";
+import { Options } from "./types/Options";
+import { SummeryDetail } from "./types/SummeryDetail";
 
 
 export const options: Options = {
@@ -19,32 +20,6 @@ export const options: Options = {
 const summery = new Map<string, SummeryDetail>();
 
 const diffPatcher = create(getDiffOptions());
-
-type SummeryDetail = {
-  result: boolean;
-  reason: string;
-}
-type Options = {
-  noCheckFilesRoot: string[]
-  dynamicFilesCount: number
-  noCheckFilesDynamic: string[]
-  schemaCheck: Map<string, string>
-  fileDocsDynamic: Map<string, string>
-  fileDocsRoot: Map<string, string>
-}
-
-
-export async function getContent(contentRequest:any, octokit: any) {
-  const resultOld = await octokit.rest.repos.getContent(contentRequest);
-  //console.log("oldFileResult: " + resultOld)
-  if (!resultOld) {
-    //console.log("old result was empty")
-    return null
-  }
-  const contentOld = Buffer.from(resultOld.data.content, 'base64').toString();
-  //console.log(contentRequest, contentOld)
-  return parse(contentOld)
-}
 
 // ## summery
 function setResult(filename: string, result: boolean, reason:string) {
