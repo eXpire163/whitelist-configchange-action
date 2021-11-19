@@ -10,7 +10,10 @@ const options: Options = {
   noCheckFilesRoot: ["index.js"], //files relative to root
   dynamicFilesCount: 2, //ignored folders starting from root
   noCheckFilesDynamic: ["subbed/namespace.yml"], //filename relative after ignored folders
-  schemaCheck: new Map([[ "subbed/config.yaml", "schemas/test.schema.json"]]) //xpath (todo) in dynamic folders
+  schemaCheck: new Map([[ "subbed/config.yaml", "schemas/test.schema.json"]]), //xpath (todo) in dynamic folders
+  fileDocsRoot: new Map([["index.js", "Hope you know that you are changeing the pipeline!!!"]]),
+  fileDocsDynamic: new Map([["subbed/namespace.yml", "Have you checked your available resources to handle your namespace change?"]])
+
 }
 const summery = new Map<string, SummeryDetail>();
 
@@ -25,6 +28,8 @@ type Options = {
   dynamicFilesCount: number
   noCheckFilesDynamic: string[]
   schemaCheck: Map<string, string>
+  fileDocsDynamic: Map<string, string>
+  fileDocsRoot: Map<string, string>
 }
 
 
@@ -151,12 +156,32 @@ async function run(): Promise<void> {
         dynamicPath = dynamicPath.substring(dynamicPath.indexOf('/') + 1)
       }
 
+      if (options.fileDocsDynamic.has(dynamicPath)){
+        octokit.rest.issues.createComment({
+          owner: org,
+          repo: repo,
+          issue_number: pull_number,
+          body: options.fileDocsDynamic.get(dynamicPath)+"",
+        });
+      }
+
+      if (options.fileDocsRoot.has(filename)) {
+        octokit.rest.issues.createComment({
+          owner: org,
+          repo: repo,
+          issue_number: pull_number,
+          body: options.fileDocsDynamic.get(filename) + "",
+        });
+      }
+
+
       if (filename in options.noCheckFilesRoot) {
         setResult(filename, true, "part of noCheckFilesRoot")
         continue
       }
       if (dynamicPath in options.noCheckFilesDynamic) {
         setResult(filename, true, "part of noCheckFilesDynamic")
+
         continue
       }
 
