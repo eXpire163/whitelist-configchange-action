@@ -69,7 +69,7 @@ async function run(): Promise<void> {
     const files = thisPR.data
 
     //check if PR is documented
-    const isPrDocumented = isDocumentPR(octokit, org, repo, pull_number)
+    const isPrDocumented = await isDocumentPR(octokit, org, repo, pull_number)
     console.log("DEBUG: isPrDocumented", isPrDocumented)
 
 
