@@ -316,7 +316,7 @@ exports.options = {
     fileDocsDynamic: new Map([["subbed/namespace.yml", "Have you checked your available resources to handle your namespace change?"]]),
     docLabel: "bot/documented",
     pathDocsDynamic: new Map([["subbed/config.yaml", [
-                { path: "lvl1/*/val1", text: "val1 changed" },
+                { path: "nodegroups/*/instance-type", text: "instance-type changed" },
                 { path: "lvl1", text: "lvl1 changed or subelement" }
             ]]])
 };

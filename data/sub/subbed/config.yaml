@@ -2,7 +2,7 @@
 nodegroups:
   blue:
     desired-size: 4
-    instance-type: m8.xlarge
+    instance-type: m12.xlarge
     k8s-labels:
       node-group-name: blue
       env: prod
