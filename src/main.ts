@@ -2,7 +2,7 @@ import * as github from "@actions/github";
 import * as core from '@actions/core';
 import { create } from 'jsondiffpatch';
 import { getDiffOptions, validate } from "./validation";
-import { documentPR, isDocumentPR } from "./documentPR";
+import { documentPR, documentPrPath, isDocumentPR } from "./documentPR";
 import { getContent } from "./getContent";
 import { SummeryDetail } from "./types/SummeryDetail";
 import { options } from "./options";
@@ -143,6 +143,11 @@ async function run(): Promise<void> {
       // run the compare
       const delta = diffPatcher.diff(jsonOld, jsonNew) as never;
       console.log("ℹ delta", delta)
+
+      //document PR
+      if (!isPrDocumented)
+        documentPrPath(dynamicPath, octokit, org, repo, pull_number, filename, delta);
+
 
       //console.log(jsonDiffPatch.formatters.console.format(delta))
 

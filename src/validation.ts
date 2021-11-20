@@ -91,7 +91,7 @@ function checkNested(obj: any, path: string[] | undefined) : boolean {
     console.log("rest: ", rest)
     if (obj === undefined) return false
     if (level == "*") {
-        for (const [key, value] of Object.entries(obj)) {
+        for (const [, value] of Object.entries(obj)) {
             //console.log(`looping: ${key}: ${value}`);
             if (checkNested(value, rest)) return true
         }

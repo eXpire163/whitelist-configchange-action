@@ -6,5 +6,10 @@ export type Options = {
   fileDocsDynamic: Map<string, string>;
   fileDocsRoot: Map<string, string>;
   docLabel: string;
-  pathDocsDynamic: Map<string, {path: string, text: string}[]>;
+  pathDocsDynamic: Map<string, PathDoc[]>;
 };
+
+export type PathDoc = {
+  path : string
+  text: string
+}

@@ -16,8 +16,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.documentPR = exports.isDocumentPR = void 0;
+exports.documentPrPath = exports.documentPR = exports.isDocumentPR = void 0;
 const options_1 = __nccwpck_require__(1353);
+const validation_1 = __nccwpck_require__(581);
 function isDocumentPR(octokit, owner, repo, issue_number) {
     return __awaiter(this, void 0, void 0, function* () {
         const labels = yield octokit.rest.issues.listLabelsOnIssue({
@@ -57,6 +58,35 @@ function documentPR(dynamicPath, octokit, owner, repo, issue_number, filename) {
     });
 }
 exports.documentPR = documentPR;
+function documentPrPath(dynamicPath, octokit, owner, repo, issue_number, filename, diff) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (options_1.options.pathDocsDynamic.has(dynamicPath)) {
+            console.log("DEBUG: found dynamic doc file");
+            const pathDocs = options_1.options.pathDocsDynamic.get(dynamicPath);
+            if (pathDocs !== undefined) {
+                for (const check of pathDocs) {
+                    console.log("DEBUG: check in dyn doc", check);
+                    const isNested = (0, validation_1.hasNested)(diff, check.path);
+                    if (isNested) {
+                        octokit.rest.issues.createComment({
+                            owner,
+                            repo: repo,
+                            issue_number,
+                            body: check.text,
+                        });
+                    }
+                }
+            }
+        }
+        octokit.rest.issues.addLabels({
+            owner,
+            repo,
+            issue_number,
+            labels: [options_1.options.docLabel]
+        });
+    });
+}
+exports.documentPrPath = documentPrPath;
 
 
 /***/ }),
@@ -240,6 +270,9 @@ function run() {
                 // run the compare
                 const delta = diffPatcher.diff(jsonOld, jsonNew);
                 console.log("ℹ delta", delta);
+                //document PR
+                if (!isPrDocumented)
+                    (0, documentPR_1.documentPrPath)(dynamicPath, octokit, org, repo, pull_number, filename, delta);
                 //console.log(jsonDiffPatch.formatters.console.format(delta))
                 const result = yield (0, validation_1.validate)(delta, dynamicPath, org, repo, octokit);
                 setResult(filename, result.result, result.reason);
@@ -388,7 +421,7 @@ function checkNested(obj, path) {
     if (obj === undefined)
         return false;
     if (level == "*") {
-        for (const [key, value] of Object.entries(obj)) {
+        for (const [, value] of Object.entries(obj)) {
             //console.log(`looping: ${key}: ${value}`);
             if (checkNested(value, rest))
                 return true;
