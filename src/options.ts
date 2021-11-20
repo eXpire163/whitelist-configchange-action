@@ -10,7 +10,7 @@ export const options: Options = {
   fileDocsDynamic: new Map([["subbed/namespace.yml", "Have you checked your available resources to handle your namespace change?"]]),
   docLabel: "bot/documented",
   pathDocsDynamic: new Map([["subbed/config.yaml", [
-    { path: "nodegroups/*/instance-type", text: "# Instance type changed\nChanging the instance type will recycle all nodes one by one. \n- [] Make sure you don't have **single points of failures** in your app\n- [] This will effect the **cost** of your cluster"},
+    { path: "nodegroups/*/instance-type", text: "# Instance type changed\nChanging the instance type will recycle all nodes one by one. \n- [ ] Make sure you don't have **single points of failures** in your app\n- [ ] This will effect the **cost** of your cluster"},
     {path: "lvl1", text: "lvl1 changed or subelement"}
   ]]])
 };
