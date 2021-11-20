@@ -8,5 +8,9 @@ export const options: Options = {
   schemaCheck: new Map([["subbed/config.yaml", "schemas/test.schema.json"]]),
   fileDocsRoot: new Map([["src/main.ts", "Hope you know that you are changing the pipeline!!!"]]),
   fileDocsDynamic: new Map([["subbed/namespace.yml", "Have you checked your available resources to handle your namespace change?"]]),
-  docLabel: "bot/documented"
+  docLabel: "bot/documented",
+  pathDocsDynamic: new Map([["subbed/config.yaml", [
+    {path: "lvl1/*/val1", text: "val1 changed"},
+    {path: "lvl1", text: "lvl1 changed or subelement"}
+  ]]])
 };

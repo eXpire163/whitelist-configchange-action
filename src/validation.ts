@@ -27,6 +27,8 @@ export async function validate(delta: never, filename: string, org: string, repo
 }
 
 
+
+
 export function getDiffOptions(){
     return {
         // used to match objects when diffing arrays, by default only === operator is used
@@ -68,4 +70,33 @@ export function validateDiff(diff: never, schema: never){
     }
     return true
 
+}
+
+
+
+
+//var test = { level1: { level2: { level3: 'level3' } } };
+//console.log(hasNested(test, "level1/level2/level4"))
+
+export function hasNested(obj:any, path:string): boolean {
+    return checkNested(obj, path.split("/"))
+}
+
+function checkNested(obj: any, path: string[] | undefined) : boolean {
+    if(path === undefined) return false
+    const level = path[0]
+    path.shift()
+    const rest = path
+    console.log("level: ", level)
+    console.log("rest: ", rest)
+    if (obj === undefined) return false
+    if (level == "*") {
+        for (const [key, value] of Object.entries(obj)) {
+            //console.log(`looping: ${key}: ${value}`);
+            if (checkNested(value, rest)) return true
+        }
+    }
+    if (rest.length == 0 && Object.prototype.hasOwnProperty.call(obj, level)) return true
+
+    return checkNested(obj[level], rest)
 }

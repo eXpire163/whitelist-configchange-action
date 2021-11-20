@@ -31,6 +31,8 @@
     "ajv-formats": "^2.1.1",
     "buffer": "^6.0.3",
     "jsondiffpatch": "^0.4.1",
+    "lodash": "^4.17.21",
+    "lodash.has": "^4.5.2",
     "yaml": "^1.10.2"
   },
   "devDependencies": {

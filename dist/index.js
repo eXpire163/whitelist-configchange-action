@@ -281,7 +281,11 @@ exports.options = {
     schemaCheck: new Map([["subbed/config.yaml", "schemas/test.schema.json"]]),
     fileDocsRoot: new Map([["src/main.ts", "Hope you know that you are changing the pipeline!!!"]]),
     fileDocsDynamic: new Map([["subbed/namespace.yml", "Have you checked your available resources to handle your namespace change?"]]),
-    docLabel: "bot/documented"
+    docLabel: "bot/documented",
+    pathDocsDynamic: new Map([["subbed/config.yaml", [
+                { path: "lvl1/*/val1", text: "val1 changed" },
+                { path: "lvl1", text: "lvl1 changed or subelement" }
+            ]]])
 };
 
 
@@ -305,7 +309,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.validateDiff = exports.getDiffOptions = exports.validate = void 0;
+exports.hasNested = exports.validateDiff = exports.getDiffOptions = exports.validate = void 0;
 const options_1 = __nccwpck_require__(1353);
 const getContent_1 = __nccwpck_require__(8463);
 const _2019_1 = __importDefault(__nccwpck_require__(5988));
@@ -367,6 +371,33 @@ function validateDiff(diff, schema) {
     return true;
 }
 exports.validateDiff = validateDiff;
+//var test = { level1: { level2: { level3: 'level3' } } };
+//console.log(hasNested(test, "level1/level2/level4"))
+function hasNested(obj, path) {
+    return checkNested(obj, path.split("/"));
+}
+exports.hasNested = hasNested;
+function checkNested(obj, path) {
+    if (path === undefined)
+        return false;
+    const level = path[0];
+    path.shift();
+    const rest = path;
+    console.log("level: ", level);
+    console.log("rest: ", rest);
+    if (obj === undefined)
+        return false;
+    if (level == "*") {
+        for (const [key, value] of Object.entries(obj)) {
+            //console.log(`looping: ${key}: ${value}`);
+            if (checkNested(value, rest))
+                return true;
+        }
+    }
+    if (rest.length == 0 && Object.prototype.hasOwnProperty.call(obj, level))
+        return true;
+    return checkNested(obj[level], rest);
+}
 
 
 /***/ }),
