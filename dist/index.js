@@ -184,10 +184,11 @@ function setResult(filename, result, reason) {
     summery.set(filename, { result: result, reason: reason });
 }
 function printSummery() {
-    core.notice("########### result ##########");
+    let message = "########### result ##########\n";
     summery.forEach((value, key) => {
-        core.notice(`File ${key} was ${value.reason} ${value.result ? "✔" : "✖"}`);
+        message += `File ${key} was ${value.reason} ${value.result ? "✔" : "✖"}\n`;
     });
+    core.notice(message);
 }
 function run() {
     return __awaiter(this, void 0, void 0, function* () {

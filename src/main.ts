@@ -19,10 +19,11 @@ function setResult(filename: string, result: boolean, reason:string) {
   summery.set(filename, { result: result, reason: reason })
 }
 function printSummery() {
-  core.notice("########### result ##########");
+  let message = "########### result ##########\n"
   summery.forEach((value: SummeryDetail, key: string) => {
-    core.notice(`File ${key} was ${value.reason} ${value.result ? "✔" : "✖"}`)
+    message+=`File ${key} was ${value.reason} ${value.result ? "✔" : "✖"}\n`
   });
+  core.notice(message)
 }
 
 
