@@ -44,7 +44,7 @@ export async function documentPR(dynamicPath: string, octokit: OctoType, owner: 
 
 
 //documentation call for changes within a specific path in a yaml file
-export async function documentPrPath(dynamicPath: string, octokit: OctoType, owner: string, repo: string, issue_number: number, filename: string, diff: any) {
+export async function documentPrPath(dynamicPath: string, octokit: OctoType, owner: string, repo: string, issue_number: number, filename: string, diff: never) {
 
   // document dynamic path changes
   if (options.pathDocsDynamic.has(dynamicPath)) {

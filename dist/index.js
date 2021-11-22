@@ -122,6 +122,25 @@ function labelPrAsDocumented(octokit, owner, repo, issue_number) {
 
 "use strict";
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -135,17 +154,18 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.getContent = void 0;
 const yaml_1 = __nccwpck_require__(3552);
 const buffer_1 = __nccwpck_require__(4293);
+const core = __importStar(__nccwpck_require__(2186));
 //retrieve the content of a file as plane text
 function getContent(contentRequest, octokit) {
     return __awaiter(this, void 0, void 0, function* () {
         const result = yield octokit.rest.repos.getContent(contentRequest);
-        //console.log("oldFileResult: " + resultOld)
+        //core.info("oldFileResult: " + resultOld)
         if (!result) {
-            //console.log("old result was empty")
+            core.debug("result was empty for " + contentRequest);
             return null;
         }
         const content = buffer_1.Buffer.from(result.data.content, 'base64').toString();
-        //console.log(contentRequest, contentOld)
+        //core.info(contentRequest, contentOld)
         return (0, yaml_1.parse)(content);
     });
 }
@@ -201,6 +221,7 @@ const summery = new Map();
 const diffPatcher = (0, jsondiffpatch_1.create)((0, validation_1.getDiffOptions)());
 // ## summery
 function setResult(filename, result, reason) {
+    core.info(`${{ filename: filename, details: { result: result, reason: reason } }}`);
     summery.set(filename, { result: result, reason: reason });
 }
 function printSummery() {
@@ -212,7 +233,7 @@ function printSummery() {
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            //console.log("hi there ⚠");
+            //core.info("hi there ⚠");
             //getting base information
             const myToken = core.getInput('myToken');
             const octokit = github.getOctokit(myToken);
@@ -234,7 +255,7 @@ function run() {
             const repo = repository.name;
             const pull_number = payload.number;
             const filesChanged = payload.pull_request.changed_files;
-            // console.log("ℹ this is a pr", repository.owner.login,
+            // core.info("ℹ this is a pr", repository.owner.login,
             //   repository.name,
             //   payload.number)
             //load pr files
@@ -283,7 +304,7 @@ function run() {
                 //only allowing yaml/yml files
                 //todo "remove else"
                 if (filename.endsWith(".yaml") || filename.endsWith(".yml")) {
-                    //console.log("ℹ file is a yml/yaml")
+                    //core.info("ℹ file is a yml/yaml")
                 }
                 else {
                     setResult(filename, false, "file is not a yaml");
@@ -302,11 +323,11 @@ function run() {
                 }
                 // run the compare
                 const delta = diffPatcher.diff(jsonOld, jsonNew);
-                console.log("ℹ delta", delta);
+                core.debug("ℹ delta: " + delta);
                 //document PR
                 if (!isPrDocumented)
                     (0, documentPR_1.documentPrPath)(dynamicPath, octokit, org, repo, pull_number, filename, delta);
-                //console.log(jsonDiffPatch.formatters.console.format(delta))
+                //core.info(jsonDiffPatch.formatters.console.format(delta))
                 const result = yield (0, validation_1.validate)(delta, dynamicPath, org, repo, octokit);
                 setResult(filename, result.result, result.reason);
                 core.endGroup();
@@ -315,16 +336,16 @@ function run() {
             if (summery.size != filesChanged) {
                 throw `Some files could not be classified, should be ${filesChanged} / was ${summery.size}`;
             }
-            console.log("All files could be classified ✔");
+            core.info("All files could be classified ✔");
             //check if map contains "false" elements
             const falseMap = new Map([...summery].filter(([, v]) => v.result == false));
             if (falseMap.size > 0) {
                 throw "PR contains changes that are not whitelisted";
             }
-            console.log("all files seem to be valid and can be merged");
+            core.info("all files seem to be valid and can be merged");
         }
         catch (error) {
-            console.log("pipeline failed", error);
+            core.error("pipeline failed: " + error);
             core.setFailed(`Pipeline failed: ${error}`);
         }
     });
@@ -365,6 +386,25 @@ exports.options = {
 
 "use strict";
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -383,6 +423,7 @@ const options_1 = __nccwpck_require__(1353);
 const getContent_1 = __nccwpck_require__(8463);
 const _2019_1 = __importDefault(__nccwpck_require__(5988));
 const ajv_formats_1 = __importDefault(__nccwpck_require__(567));
+const core = __importStar(__nccwpck_require__(2186));
 function validate(delta, filename, org, repo, octokit) {
     return __awaiter(this, void 0, void 0, function* () {
         //is there a whitelist entry
@@ -391,11 +432,11 @@ function validate(delta, filename, org, repo, octokit) {
             return { result: false, reason: "no noCheckPath found for this file " + filename };
         }
         const schemaPath = options_1.options.schemaCheck.get(filename);
-        console.log("ℹ working with noCheckPath", schemaPath);
-        console.log("ℹ current diff is", delta);
+        core.debug("working with noCheckPath: " + schemaPath);
+        core.debug("current diff is: " + delta);
         const contentRequest = { owner: org, repo: repo, path: schemaPath };
         const schema = yield (0, getContent_1.getContent)(contentRequest, octokit);
-        console.log("ℹ current schema is", schema);
+        core.debug("current schema is: " + schema);
         if (validateDiff(delta, schema)) {
             return { result: true, reason: "validation OK" };
         }
@@ -434,14 +475,14 @@ function validateDiff(diff, schema) {
     const validate = ajv.compile(schema);
     const valid = validate(diff);
     if (!valid) {
-        console.log(validate.errors);
+        core.info(validate.errors + "");
         return false;
     }
     return true;
 }
 exports.validateDiff = validateDiff;
 //var test = { level1: { level2: { level3: 'level3' } } };
-//console.log(hasNested(test, "level1/level2/level4"))
+//core.info(hasNested(test, "level1/level2/level4"))
 function hasNested(obj, path) {
     return checkNested(obj, path.split("/"));
 }
@@ -449,16 +490,17 @@ exports.hasNested = hasNested;
 function checkNested(obj, path) {
     if (path === undefined)
         return false;
-    const level = path[0];
-    path.shift();
+    const level = path.shift();
     const rest = path;
-    console.log("level: ", level);
-    console.log("rest: ", rest);
+    if (level === undefined)
+        return false;
+    core.debug("level: " + level);
+    core.debug("rest: " + rest);
     if (obj === undefined)
         return false;
     if (level == "*") {
         for (const [, value] of Object.entries(obj)) {
-            //console.log(`looping: ${key}: ${value}`);
+            //core.info(`looping: ${key}: ${value}`);
             if (checkNested(value, rest))
                 return true;
         }
