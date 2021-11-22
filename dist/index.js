@@ -251,7 +251,7 @@ function run() {
             for (const file of files) {
                 const filename = file.filename;
                 // Manually wrap output
-                core.startGroup('filename');
+                core.startGroup(filename);
                 //ignore the first x folders in the path - like project name that could change
                 //techdebt - make it smarter
                 let dynamicPath = filename;

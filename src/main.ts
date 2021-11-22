@@ -82,7 +82,7 @@ async function run(): Promise<void> {
       const filename = file.filename
 
       // Manually wrap output
-      core.startGroup('filename')
+      core.startGroup(filename)
 
 
 
