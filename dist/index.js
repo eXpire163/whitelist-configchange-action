@@ -6,6 +6,25 @@ require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 
 "use strict";
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -16,8 +35,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.documentPR = exports.isDocumentPR = void 0;
+exports.documentPrPath = exports.documentPR = exports.isDocumentPR = void 0;
 const options_1 = __nccwpck_require__(1353);
+const validation_1 = __nccwpck_require__(581);
+const core = __importStar(__nccwpck_require__(2186));
+//check if PR already has the "docLabel in place" label in place
 function isDocumentPR(octokit, owner, repo, issue_number) {
     return __awaiter(this, void 0, void 0, function* () {
         const labels = yield octokit.rest.issues.listLabelsOnIssue({
@@ -30,8 +52,10 @@ function isDocumentPR(octokit, owner, repo, issue_number) {
     });
 }
 exports.isDocumentPR = isDocumentPR;
+//documentation for general changed files
 function documentPR(dynamicPath, octokit, owner, repo, issue_number, filename) {
     return __awaiter(this, void 0, void 0, function* () {
+        // document dynamic file changes
         if (options_1.options.fileDocsDynamic.has(dynamicPath)) {
             octokit.rest.issues.createComment({
                 owner,
@@ -40,6 +64,7 @@ function documentPR(dynamicPath, octokit, owner, repo, issue_number, filename) {
                 body: options_1.options.fileDocsDynamic.get(dynamicPath) + "",
             });
         }
+        // document absolute file changes
         if (options_1.options.fileDocsRoot.has(filename)) {
             octokit.rest.issues.createComment({
                 owner,
@@ -48,15 +73,46 @@ function documentPR(dynamicPath, octokit, owner, repo, issue_number, filename) {
                 body: options_1.options.fileDocsRoot.get(filename) + "",
             });
         }
-        octokit.rest.issues.addLabels({
-            owner,
-            repo,
-            issue_number,
-            labels: [options_1.options.docLabel]
-        });
+        // add label to define PR as documented
+        labelPrAsDocumented(octokit, owner, repo, issue_number);
     });
 }
 exports.documentPR = documentPR;
+//documentation call for changes within a specific path in a yaml file
+function documentPrPath(dynamicPath, octokit, owner, repo, issue_number, filename, diff) {
+    return __awaiter(this, void 0, void 0, function* () {
+        // document dynamic path changes
+        if (options_1.options.pathDocsDynamic.has(dynamicPath)) {
+            core.debug("found dynamic doc file");
+            const pathDocs = options_1.options.pathDocsDynamic.get(dynamicPath);
+            if (pathDocs !== undefined) {
+                for (const check of pathDocs) {
+                    core.debug("check in dyn doc " + check);
+                    const isNested = (0, validation_1.hasNested)(diff, check.path);
+                    if (isNested) {
+                        octokit.rest.issues.createComment({
+                            owner,
+                            repo: repo,
+                            issue_number,
+                            body: check.text,
+                        });
+                    }
+                }
+            }
+        }
+        // add label to define PR as documented
+        labelPrAsDocumented(octokit, owner, repo, issue_number);
+    });
+}
+exports.documentPrPath = documentPrPath;
+function labelPrAsDocumented(octokit, owner, repo, issue_number) {
+    octokit.rest.issues.addLabels({
+        owner,
+        repo,
+        issue_number,
+        labels: [options_1.options.docLabel]
+    });
+}
 
 
 /***/ }),
@@ -79,17 +135,18 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.getContent = void 0;
 const yaml_1 = __nccwpck_require__(3552);
 const buffer_1 = __nccwpck_require__(4293);
+//retrieve the content of a file as plane text
 function getContent(contentRequest, octokit) {
     return __awaiter(this, void 0, void 0, function* () {
-        const resultOld = yield octokit.rest.repos.getContent(contentRequest);
+        const result = yield octokit.rest.repos.getContent(contentRequest);
         //console.log("oldFileResult: " + resultOld)
-        if (!resultOld) {
+        if (!result) {
             //console.log("old result was empty")
             return null;
         }
-        const contentOld = buffer_1.Buffer.from(resultOld.data.content, 'base64').toString();
+        const content = buffer_1.Buffer.from(result.data.content, 'base64').toString();
         //console.log(contentRequest, contentOld)
-        return (0, yaml_1.parse)(contentOld);
+        return (0, yaml_1.parse)(content);
     });
 }
 exports.getContent = getContent;
@@ -138,16 +195,18 @@ const validation_1 = __nccwpck_require__(581);
 const documentPR_1 = __nccwpck_require__(6941);
 const getContent_1 = __nccwpck_require__(8463);
 const options_1 = __nccwpck_require__(1353);
+//map with final results
 const summery = new Map();
+//diff tool definition
 const diffPatcher = (0, jsondiffpatch_1.create)((0, validation_1.getDiffOptions)());
 // ## summery
 function setResult(filename, result, reason) {
     summery.set(filename, { result: result, reason: reason });
 }
 function printSummery() {
-    console.log("########### result ##########");
+    core.notice("########### result ##########\n");
     summery.forEach((value, key) => {
-        console.log(`File ${key} was ${value.reason} ${value.result ? "✔" : "✖"}`);
+        core.notice(`File ${key} was ${value.reason} ${value.result ? "✔" : "✖"}`);
     });
 }
 function run() {
@@ -159,7 +218,7 @@ function run() {
             const octokit = github.getOctokit(myToken);
             const context = github.context;
             if (context.eventName != "pull_request") {
-                console.log("this pipeline is only for pull requests");
+                core.warning("this pipeline is only for pull requests");
                 return;
             }
             //getting pr related information
@@ -187,11 +246,12 @@ function run() {
             const files = thisPR.data;
             //check if PR is documented
             const isPrDocumented = yield (0, documentPR_1.isDocumentPR)(octokit, org, repo, pull_number);
-            console.log("DEBUG: isPrDocumented", isPrDocumented);
+            core.debug(`isPrDocumented ${isPrDocumented}`);
             //iterating over changed files
             for (const file of files) {
                 const filename = file.filename;
-                //check for noCheckFiles (whitelist)
+                // Manually wrap output
+                core.startGroup(filename);
                 //ignore the first x folders in the path - like project name that could change
                 //techdebt - make it smarter
                 let dynamicPath = filename;
@@ -201,14 +261,16 @@ function run() {
                 //document PR
                 if (!isPrDocumented)
                     (0, documentPR_1.documentPR)(dynamicPath, octokit, org, repo, pull_number, filename);
-                // whitelisted files
-                //console.log("DEBUG: whitelist check root", filename, options.noCheckFilesRoot);
+                // ####### whitelisted files ############
+                // absolute path check
+                //core.debug("whitelist check root", filename, options.noCheckFilesRoot);
                 if (options_1.options.noCheckFilesRoot.includes(filename)) {
-                    //console.log("DEBUG: file in whitelist", filename)
+                    //core.debug("file in whitelist", filename)
                     setResult(filename, true, "part of noCheckFilesRoot");
                     continue;
                 }
-                //console.log("DEBUG: whitelist check dynamic", dynamicPath, options.noCheckFilesDynamic);
+                // dynamic path check
+                //core.debug("whitelist check dynamic", dynamicPath, options.noCheckFilesDynamic);
                 if (options_1.options.noCheckFilesDynamic.includes(dynamicPath)) {
                     setResult(filename, true, "part of noCheckFilesDynamic");
                     continue;
@@ -219,6 +281,7 @@ function run() {
                     continue;
                 }
                 //only allowing yaml/yml files
+                //todo "remove else"
                 if (filename.endsWith(".yaml") || filename.endsWith(".yml")) {
                     //console.log("ℹ file is a yml/yaml")
                 }
@@ -240,9 +303,13 @@ function run() {
                 // run the compare
                 const delta = diffPatcher.diff(jsonOld, jsonNew);
                 console.log("ℹ delta", delta);
+                //document PR
+                if (!isPrDocumented)
+                    (0, documentPR_1.documentPrPath)(dynamicPath, octokit, org, repo, pull_number, filename, delta);
                 //console.log(jsonDiffPatch.formatters.console.format(delta))
                 const result = yield (0, validation_1.validate)(delta, dynamicPath, org, repo, octokit);
                 setResult(filename, result.result, result.reason);
+                core.endGroup();
             }
             printSummery();
             if (summery.size != filesChanged) {
@@ -274,6 +341,8 @@ run();
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.options = void 0;
+// setting current options
+// todo: find a way to make it more user friendly -> read from .github/whitelist.yml
 exports.options = {
     noCheckFilesRoot: ["src/main.ts", "dist/index.js", "dist/index.js.map", "dist/licenses.txt", "dist/sourcemap-register.js", "package-lock.json", "package.json"],
     dynamicFilesCount: 2,
@@ -281,7 +350,11 @@ exports.options = {
     schemaCheck: new Map([["subbed/config.yaml", "schemas/test.schema.json"]]),
     fileDocsRoot: new Map([["src/main.ts", "Hope you know that you are changing the pipeline!!!"]]),
     fileDocsDynamic: new Map([["subbed/namespace.yml", "Have you checked your available resources to handle your namespace change?"]]),
-    docLabel: "bot/documented"
+    docLabel: "bot/documented",
+    pathDocsDynamic: new Map([["subbed/config.yaml", [
+                { path: "nodegroups/*/instance-type", text: "# Instance type changed\nChanging the instance type will recycle all nodes one by one. \n- [ ] Make sure you don't have **single points of failures** in your app\n- [ ] This will effect the **cost** of your cluster" },
+                { path: "lvl1", text: "lvl1 changed or subelement" }
+            ]]])
 };
 
 
@@ -305,7 +378,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.validateDiff = exports.getDiffOptions = exports.validate = void 0;
+exports.hasNested = exports.validateDiff = exports.getDiffOptions = exports.validate = void 0;
 const options_1 = __nccwpck_require__(1353);
 const getContent_1 = __nccwpck_require__(8463);
 const _2019_1 = __importDefault(__nccwpck_require__(5988));
@@ -367,6 +440,33 @@ function validateDiff(diff, schema) {
     return true;
 }
 exports.validateDiff = validateDiff;
+//var test = { level1: { level2: { level3: 'level3' } } };
+//console.log(hasNested(test, "level1/level2/level4"))
+function hasNested(obj, path) {
+    return checkNested(obj, path.split("/"));
+}
+exports.hasNested = hasNested;
+function checkNested(obj, path) {
+    if (path === undefined)
+        return false;
+    const level = path[0];
+    path.shift();
+    const rest = path;
+    console.log("level: ", level);
+    console.log("rest: ", rest);
+    if (obj === undefined)
+        return false;
+    if (level == "*") {
+        for (const [, value] of Object.entries(obj)) {
+            //console.log(`looping: ${key}: ${value}`);
+            if (checkNested(value, rest))
+                return true;
+        }
+    }
+    if (rest.length == 0 && Object.prototype.hasOwnProperty.call(obj, level))
+        return true;
+    return checkNested(obj[level], rest);
+}
 
 
 /***/ }),

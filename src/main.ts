@@ -2,14 +2,16 @@ import * as github from "@actions/github";
 import * as core from '@actions/core';
 import { create } from 'jsondiffpatch';
 import { getDiffOptions, validate } from "./validation";
-import { documentPR, isDocumentPR } from "./documentPR";
+import { documentPR, documentPrPath, isDocumentPR } from "./documentPR";
 import { getContent } from "./getContent";
 import { SummeryDetail } from "./types/SummeryDetail";
 import { options } from "./options";
 import {OctoType} from "./types/OctoType"
 
-
+//map with final results
 const summery = new Map<string, SummeryDetail>();
+
+//diff tool definition
 const diffPatcher = create(getDiffOptions());
 
 // ## summery
@@ -17,9 +19,9 @@ function setResult(filename: string, result: boolean, reason:string) {
   summery.set(filename, { result: result, reason: reason })
 }
 function printSummery() {
-  console.log("########### result ##########");
+  core.notice("########### result ##########\n");
   summery.forEach((value: SummeryDetail, key: string) => {
-    console.log(`File ${key} was ${value.reason} ${value.result ? "✔" : "✖"}`)
+    core.notice(`File ${key} was ${value.reason} ${value.result ? "✔" : "✖"}`)
   });
 }
 
@@ -36,7 +38,7 @@ async function run(): Promise<void> {
 
 
     if (context.eventName != "pull_request") {
-      console.log("this pipeline is only for pull requests")
+      core.warning("this pipeline is only for pull requests")
       return
     }
     //getting pr related information
@@ -70,7 +72,7 @@ async function run(): Promise<void> {
 
     //check if PR is documented
     const isPrDocumented = await isDocumentPR(octokit, org, repo, pull_number)
-    console.log("DEBUG: isPrDocumented", isPrDocumented)
+    core.debug(`isPrDocumented ${isPrDocumented}`)
 
 
 
@@ -79,9 +81,12 @@ async function run(): Promise<void> {
 
       const filename = file.filename
 
+      // Manually wrap output
+      core.startGroup(filename)
 
 
-      //check for noCheckFiles (whitelist)
+
+
 
       //ignore the first x folders in the path - like project name that could change
       //techdebt - make it smarter
@@ -95,15 +100,17 @@ async function run(): Promise<void> {
       if (!isPrDocumented)
         documentPR(dynamicPath, octokit, org, repo, pull_number, filename);
 
-      // whitelisted files
-      //console.log("DEBUG: whitelist check root", filename, options.noCheckFilesRoot);
+      // ####### whitelisted files ############
+      // absolute path check
+      //core.debug("whitelist check root", filename, options.noCheckFilesRoot);
       if (options.noCheckFilesRoot.includes(filename)) {
-        //console.log("DEBUG: file in whitelist", filename)
+        //core.debug("file in whitelist", filename)
         setResult(filename, true, "part of noCheckFilesRoot")
         continue
       }
 
-      //console.log("DEBUG: whitelist check dynamic", dynamicPath, options.noCheckFilesDynamic);
+      // dynamic path check
+      //core.debug("whitelist check dynamic", dynamicPath, options.noCheckFilesDynamic);
       if (options.noCheckFilesDynamic.includes(dynamicPath)) {
         setResult(filename, true, "part of noCheckFilesDynamic")
         continue
@@ -116,6 +123,7 @@ async function run(): Promise<void> {
       }
 
       //only allowing yaml/yml files
+      //todo "remove else"
       if (filename.endsWith(".yaml") || filename.endsWith(".yml")) {
         //console.log("ℹ file is a yml/yaml")
       }
@@ -144,12 +152,19 @@ async function run(): Promise<void> {
       const delta = diffPatcher.diff(jsonOld, jsonNew) as never;
       console.log("ℹ delta", delta)
 
+      //document PR
+      if (!isPrDocumented)
+        documentPrPath(dynamicPath, octokit, org, repo, pull_number, filename, delta);
+
+
       //console.log(jsonDiffPatch.formatters.console.format(delta))
 
 
       const result = await validate(delta, dynamicPath, org, repo, octokit)
       setResult(filename, result.result, result.reason)
 
+
+      core.endGroup()
     }
 
     printSummery()

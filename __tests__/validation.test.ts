@@ -4,19 +4,31 @@
 // import * as cp from 'child_process'
 // import * as path from 'path'
 import {expect, test} from '@jest/globals'
-import {load} from 'js-yaml'
+//import {load} from 'js-yaml'
 
-import {validate} from '../src/validation'
+import {hasNested} from '../src/validation'
 
 
-import { readFile } from "fs/promises";
+//import { readFile } from "fs/promises";
 
-test('validation', async () => {
-    const filepath = "data/sub/subbed/config.yaml"
-    const yaml = load(await readFile(filepath, "utf8"))
+// test('validation', async () => {
+//     const filepath = "data/sub/subbed/config.yaml"
+//     const yaml = load(await readFile(filepath, "utf8"))
 
-    const filepathChanged = "data/sub/subbed/configChanged.yaml"
-    const yamlChanged = load(await readFile(filepathChanged, "utf8"))
+//     const filepathChanged = "data/sub/subbed/configChanged.yaml"
+//     const yamlChanged = load(await readFile(filepathChanged, "utf8"))
+
+//     //expect.length( await validate(diff, "test.schema.json", "test", "test", null))
+// })
+
+test('hasNested', () => {
+
+    const test = { level1: { level2: { level3: 'level3' }, level21: { level5: 'level215' } } };
+    expect(hasNested(test, "level1/level2/level4")).toBeFalsy()
+    expect(hasNested(test, "level1/level2/level3")).toBeTruthy()
+
+    expect(hasNested(test, "level1/*/level4")).toBeFalsy()
+    expect(hasNested(test, "level1/*/level5")).toBeTruthy()
 
     //expect.length( await validate(diff, "test.schema.json", "test", "test", null))
 })
