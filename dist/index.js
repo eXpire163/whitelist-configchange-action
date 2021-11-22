@@ -221,6 +221,7 @@ const summery = new Map();
 const diffPatcher = (0, jsondiffpatch_1.create)((0, validation_1.getDiffOptions)());
 // ## summery
 function setResult(filename, result, reason) {
+    core.info(`${{ filename: filename, details: { result: result, reason: reason } }}`);
     summery.set(filename, { result: result, reason: reason });
 }
 function printSummery() {

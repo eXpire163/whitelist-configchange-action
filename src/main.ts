@@ -16,6 +16,7 @@ const diffPatcher = create(getDiffOptions());
 
 // ## summery
 function setResult(filename: string, result: boolean, reason:string) {
+  core.info(`${{filename: filename, details: { result: result, reason: reason }}}`)
   summery.set(filename, { result: result, reason: reason })
 }
 function printSummery() {
