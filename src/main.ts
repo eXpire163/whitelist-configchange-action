@@ -29,7 +29,7 @@ function printSummery() {
 async function run(): Promise<void> {
   try {
 
-    //console.log("hi there ⚠");
+    //core.info("hi there ⚠");
 
     //getting base information
     const myToken = core.getInput('myToken');
@@ -57,7 +57,7 @@ async function run(): Promise<void> {
     const pull_number = payload.number
     const filesChanged : number = payload.pull_request.changed_files
 
-    // console.log("ℹ this is a pr", repository.owner.login,
+    // core.info("ℹ this is a pr", repository.owner.login,
     //   repository.name,
     //   payload.number)
     //load pr files
@@ -83,8 +83,6 @@ async function run(): Promise<void> {
 
       // Manually wrap output
       core.startGroup(filename)
-
-
 
 
 
@@ -125,7 +123,7 @@ async function run(): Promise<void> {
       //only allowing yaml/yml files
       //todo "remove else"
       if (filename.endsWith(".yaml") || filename.endsWith(".yml")) {
-        //console.log("ℹ file is a yml/yaml")
+        //core.info("ℹ file is a yml/yaml")
       }
       else {
         setResult(filename, false, "file is not a yaml")
@@ -150,14 +148,14 @@ async function run(): Promise<void> {
 
       // run the compare
       const delta = diffPatcher.diff(jsonOld, jsonNew) as never;
-      console.log("ℹ delta", delta)
+      core.debug("ℹ delta: "+ delta)
 
       //document PR
       if (!isPrDocumented)
         documentPrPath(dynamicPath, octokit, org, repo, pull_number, filename, delta);
 
 
-      //console.log(jsonDiffPatch.formatters.console.format(delta))
+      //core.info(jsonDiffPatch.formatters.console.format(delta))
 
 
       const result = await validate(delta, dynamicPath, org, repo, octokit)
@@ -172,17 +170,17 @@ async function run(): Promise<void> {
       throw `Some files could not be classified, should be ${filesChanged} / was ${summery.size}`
     }
 
-    console.log("All files could be classified ✔")
+    core.info("All files could be classified ✔")
     //check if map contains "false" elements
     const falseMap = new Map([...summery].filter(([, v]) => v.result == false))
     if (falseMap.size > 0) {
       throw "PR contains changes that are not whitelisted"
 
     }
-    console.log("all files seem to be valid and can be merged")
+    core.info("all files seem to be valid and can be merged")
 
   } catch (error) {
-    console.log("pipeline failed", error)
+    core.info("pipeline failed: "+ error)
     core.setFailed(`Pipeline failed: ${error}`);
   }
 }

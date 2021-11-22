@@ -3,6 +3,7 @@ import { getContent } from "./getContent";
 import Ajv2019 from "../node_modules/ajv/dist/2019";
 import addFormats from 'ajv-formats';
 import { OctoType } from "./types/OctoType";
+import * as core from '@actions/core';
 
 
 export async function validate(delta: never, filename: string, org: string, repo: string, octokit: OctoType) {
@@ -12,13 +13,13 @@ export async function validate(delta: never, filename: string, org: string, repo
         return { result: false, reason: "no noCheckPath found for this file " + filename };
     }
     const schemaPath = options.schemaCheck.get(filename);
-    console.log("ℹ working with noCheckPath", schemaPath);
-    console.log("ℹ current diff is", delta);
+    core.debug("working with noCheckPath: " + schemaPath);
+    core.debug("current diff is: "+ delta);
 
     const contentRequest = { owner: org, repo: repo, path: schemaPath };
     const schema = await getContent(contentRequest, octokit) as never;
 
-    console.log("ℹ current schema is", schema);
+    core.debug("current schema is: " + schema);
 
     if (validateDiff(delta, schema)) {
         return { result: true, reason: "validation OK" };
@@ -65,7 +66,7 @@ export function validateDiff(diff: never, schema: never){
     const valid = validate(diff)
 
     if (!valid) {
-        console.log(validate.errors)
+        core.info(validate.errors+"")
         return false
     }
     return true
@@ -76,7 +77,7 @@ export function validateDiff(diff: never, schema: never){
 
 
 //var test = { level1: { level2: { level3: 'level3' } } };
-//console.log(hasNested(test, "level1/level2/level4"))
+//core.info(hasNested(test, "level1/level2/level4"))
 
 export function hasNested(obj:any, path:string): boolean {
     return checkNested(obj, path.split("/"))
@@ -84,15 +85,15 @@ export function hasNested(obj:any, path:string): boolean {
 
 function checkNested(obj: any, path: string[] | undefined) : boolean {
     if(path === undefined) return false
-    const level = path[0]
-    path.shift()
+    const level = path.shift()
     const rest = path
-    console.log("level: ", level)
-    console.log("rest: ", rest)
+    if (level === undefined) return false
+    core.debug("level: " + level)
+    core.debug("rest: " + rest)
     if (obj === undefined) return false
     if (level == "*") {
         for (const [, value] of Object.entries(obj)) {
-            //console.log(`looping: ${key}: ${value}`);
+            //core.info(`looping: ${key}: ${value}`);
             if (checkNested(value, rest)) return true
         }
     }
