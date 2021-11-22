@@ -2,7 +2,7 @@ import { options } from "./options";
 import { OctoType } from "./types/OctoType"
 import { hasNested } from "./validation";
 
-
+//check if PR already has the "docLabel in place" label in place
 export async function isDocumentPR(octokit: OctoType, owner: string, repo: string, issue_number: number) {
     const labels = await octokit.rest.issues.listLabelsOnIssue({
         owner,
@@ -13,9 +13,10 @@ export async function isDocumentPR(octokit: OctoType, owner: string, repo: strin
     return labels.data.filter(label => label.name == options.docLabel).length > 0
 }
 
+//documentation for general changed files
 export async function documentPR(dynamicPath: string, octokit: OctoType, owner: string, repo: string, issue_number: number, filename: string) {
 
-
+  // document dynamic file changes
   if (options.fileDocsDynamic.has(dynamicPath)) {
     octokit.rest.issues.createComment({
       owner,
@@ -25,6 +26,7 @@ export async function documentPR(dynamicPath: string, octokit: OctoType, owner: 
     });
   }
 
+  // document absolute file changes
   if (options.fileDocsRoot.has(filename)) {
     octokit.rest.issues.createComment({
       owner,
@@ -34,20 +36,16 @@ export async function documentPR(dynamicPath: string, octokit: OctoType, owner: 
     });
   }
 
-
-
-  octokit.rest.issues.addLabels({
-    owner,
-    repo,
-    issue_number,
-    labels: [options.docLabel]
-  })
+  // add label to define PR as documented
+  labelPrAsDocumented(octokit, owner, repo, issue_number);
 
 }
 
+
+//documentation call for changes within a specific path in a yaml file
 export async function documentPrPath(dynamicPath: string, octokit: OctoType, owner: string, repo: string, issue_number: number, filename: string, diff: any) {
 
-
+  // document dynamic path changes
   if (options.pathDocsDynamic.has(dynamicPath)) {
     console.log("DEBUG: found dynamic doc file");
     const pathDocs = options.pathDocsDynamic.get(dynamicPath)
@@ -69,12 +67,17 @@ export async function documentPrPath(dynamicPath: string, octokit: OctoType, own
 
   }
 
+  // add label to define PR as documented
+  labelPrAsDocumented(octokit, owner, repo, issue_number);
 
+}
+
+
+function labelPrAsDocumented(octokit: OctoType, owner: string, repo: string, issue_number: number) {
   octokit.rest.issues.addLabels({
     owner,
     repo,
     issue_number,
     labels: [options.docLabel]
-  })
-
+  });
 }

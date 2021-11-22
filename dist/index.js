@@ -19,6 +19,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.documentPrPath = exports.documentPR = exports.isDocumentPR = void 0;
 const options_1 = __nccwpck_require__(1353);
 const validation_1 = __nccwpck_require__(581);
+//check if PR already has the "docLabel in place" label in place
 function isDocumentPR(octokit, owner, repo, issue_number) {
     return __awaiter(this, void 0, void 0, function* () {
         const labels = yield octokit.rest.issues.listLabelsOnIssue({
@@ -31,8 +32,10 @@ function isDocumentPR(octokit, owner, repo, issue_number) {
     });
 }
 exports.isDocumentPR = isDocumentPR;
+//documentation for general changed files
 function documentPR(dynamicPath, octokit, owner, repo, issue_number, filename) {
     return __awaiter(this, void 0, void 0, function* () {
+        // document dynamic file changes
         if (options_1.options.fileDocsDynamic.has(dynamicPath)) {
             octokit.rest.issues.createComment({
                 owner,
@@ -41,6 +44,7 @@ function documentPR(dynamicPath, octokit, owner, repo, issue_number, filename) {
                 body: options_1.options.fileDocsDynamic.get(dynamicPath) + "",
             });
         }
+        // document absolute file changes
         if (options_1.options.fileDocsRoot.has(filename)) {
             octokit.rest.issues.createComment({
                 owner,
@@ -49,17 +53,15 @@ function documentPR(dynamicPath, octokit, owner, repo, issue_number, filename) {
                 body: options_1.options.fileDocsRoot.get(filename) + "",
             });
         }
-        octokit.rest.issues.addLabels({
-            owner,
-            repo,
-            issue_number,
-            labels: [options_1.options.docLabel]
-        });
+        // add label to define PR as documented
+        labelPrAsDocumented(octokit, owner, repo, issue_number);
     });
 }
 exports.documentPR = documentPR;
+//documentation call for changes within a specific path in a yaml file
 function documentPrPath(dynamicPath, octokit, owner, repo, issue_number, filename, diff) {
     return __awaiter(this, void 0, void 0, function* () {
+        // document dynamic path changes
         if (options_1.options.pathDocsDynamic.has(dynamicPath)) {
             console.log("DEBUG: found dynamic doc file");
             const pathDocs = options_1.options.pathDocsDynamic.get(dynamicPath);
@@ -78,15 +80,19 @@ function documentPrPath(dynamicPath, octokit, owner, repo, issue_number, filenam
                 }
             }
         }
-        octokit.rest.issues.addLabels({
-            owner,
-            repo,
-            issue_number,
-            labels: [options_1.options.docLabel]
-        });
+        // add label to define PR as documented
+        labelPrAsDocumented(octokit, owner, repo, issue_number);
     });
 }
 exports.documentPrPath = documentPrPath;
+function labelPrAsDocumented(octokit, owner, repo, issue_number) {
+    octokit.rest.issues.addLabels({
+        owner,
+        repo,
+        issue_number,
+        labels: [options_1.options.docLabel]
+    });
+}
 
 
 /***/ }),
@@ -109,17 +115,18 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.getContent = void 0;
 const yaml_1 = __nccwpck_require__(3552);
 const buffer_1 = __nccwpck_require__(4293);
+//retrieve the content of a file as plane text
 function getContent(contentRequest, octokit) {
     return __awaiter(this, void 0, void 0, function* () {
-        const resultOld = yield octokit.rest.repos.getContent(contentRequest);
+        const result = yield octokit.rest.repos.getContent(contentRequest);
         //console.log("oldFileResult: " + resultOld)
-        if (!resultOld) {
+        if (!result) {
             //console.log("old result was empty")
             return null;
         }
-        const contentOld = buffer_1.Buffer.from(resultOld.data.content, 'base64').toString();
+        const content = buffer_1.Buffer.from(result.data.content, 'base64').toString();
         //console.log(contentRequest, contentOld)
-        return (0, yaml_1.parse)(contentOld);
+        return (0, yaml_1.parse)(content);
     });
 }
 exports.getContent = getContent;
@@ -168,16 +175,18 @@ const validation_1 = __nccwpck_require__(581);
 const documentPR_1 = __nccwpck_require__(6941);
 const getContent_1 = __nccwpck_require__(8463);
 const options_1 = __nccwpck_require__(1353);
+//map with final results
 const summery = new Map();
+//diff tool definition
 const diffPatcher = (0, jsondiffpatch_1.create)((0, validation_1.getDiffOptions)());
 // ## summery
 function setResult(filename, result, reason) {
     summery.set(filename, { result: result, reason: reason });
 }
 function printSummery() {
-    console.log("########### result ##########");
+    core.notice("########### result ##########");
     summery.forEach((value, key) => {
-        console.log(`File ${key} was ${value.reason} ${value.result ? "✔" : "✖"}`);
+        core.notice(`File ${key} was ${value.reason} ${value.result ? "✔" : "✖"}`);
     });
 }
 function run() {
@@ -189,7 +198,7 @@ function run() {
             const octokit = github.getOctokit(myToken);
             const context = github.context;
             if (context.eventName != "pull_request") {
-                console.log("this pipeline is only for pull requests");
+                core.warning("this pipeline is only for pull requests");
                 return;
             }
             //getting pr related information
@@ -217,11 +226,10 @@ function run() {
             const files = thisPR.data;
             //check if PR is documented
             const isPrDocumented = yield (0, documentPR_1.isDocumentPR)(octokit, org, repo, pull_number);
-            console.log("DEBUG: isPrDocumented", isPrDocumented);
+            core.debug(`isPrDocumented ${isPrDocumented}`);
             //iterating over changed files
             for (const file of files) {
                 const filename = file.filename;
-                //check for noCheckFiles (whitelist)
                 //ignore the first x folders in the path - like project name that could change
                 //techdebt - make it smarter
                 let dynamicPath = filename;
@@ -231,13 +239,15 @@ function run() {
                 //document PR
                 if (!isPrDocumented)
                     (0, documentPR_1.documentPR)(dynamicPath, octokit, org, repo, pull_number, filename);
-                // whitelisted files
+                // ####### whitelisted files ############
+                // absolute path check
                 //console.log("DEBUG: whitelist check root", filename, options.noCheckFilesRoot);
                 if (options_1.options.noCheckFilesRoot.includes(filename)) {
                     //console.log("DEBUG: file in whitelist", filename)
                     setResult(filename, true, "part of noCheckFilesRoot");
                     continue;
                 }
+                // dynamic path check
                 //console.log("DEBUG: whitelist check dynamic", dynamicPath, options.noCheckFilesDynamic);
                 if (options_1.options.noCheckFilesDynamic.includes(dynamicPath)) {
                     setResult(filename, true, "part of noCheckFilesDynamic");
@@ -249,6 +259,7 @@ function run() {
                     continue;
                 }
                 //only allowing yaml/yml files
+                //todo "remove else"
                 if (filename.endsWith(".yaml") || filename.endsWith(".yml")) {
                     //console.log("ℹ file is a yml/yaml")
                 }
@@ -307,6 +318,8 @@ run();
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.options = void 0;
+// setting current options
+// todo: find a way to make it more user friendly -> read from .github/whitelist.yml
 exports.options = {
     noCheckFilesRoot: ["src/main.ts", "dist/index.js", "dist/index.js.map", "dist/licenses.txt", "dist/sourcemap-register.js", "package-lock.json", "package.json"],
     dynamicFilesCount: 2,

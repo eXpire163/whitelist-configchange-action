@@ -8,8 +8,10 @@ import { SummeryDetail } from "./types/SummeryDetail";
 import { options } from "./options";
 import {OctoType} from "./types/OctoType"
 
-
+//map with final results
 const summery = new Map<string, SummeryDetail>();
+
+//diff tool definition
 const diffPatcher = create(getDiffOptions());
 
 // ## summery
@@ -17,9 +19,9 @@ function setResult(filename: string, result: boolean, reason:string) {
   summery.set(filename, { result: result, reason: reason })
 }
 function printSummery() {
-  console.log("########### result ##########");
+  core.notice("########### result ##########");
   summery.forEach((value: SummeryDetail, key: string) => {
-    console.log(`File ${key} was ${value.reason} ${value.result ? "✔" : "✖"}`)
+    core.notice(`File ${key} was ${value.reason} ${value.result ? "✔" : "✖"}`)
   });
 }
 
@@ -36,7 +38,7 @@ async function run(): Promise<void> {
 
 
     if (context.eventName != "pull_request") {
-      console.log("this pipeline is only for pull requests")
+      core.warning("this pipeline is only for pull requests")
       return
     }
     //getting pr related information
@@ -70,7 +72,7 @@ async function run(): Promise<void> {
 
     //check if PR is documented
     const isPrDocumented = await isDocumentPR(octokit, org, repo, pull_number)
-    console.log("DEBUG: isPrDocumented", isPrDocumented)
+    core.debug(`isPrDocumented ${isPrDocumented}`)
 
 
 
@@ -80,8 +82,6 @@ async function run(): Promise<void> {
       const filename = file.filename
 
 
-
-      //check for noCheckFiles (whitelist)
 
       //ignore the first x folders in the path - like project name that could change
       //techdebt - make it smarter
@@ -95,7 +95,8 @@ async function run(): Promise<void> {
       if (!isPrDocumented)
         documentPR(dynamicPath, octokit, org, repo, pull_number, filename);
 
-      // whitelisted files
+      // ####### whitelisted files ############
+      // absolute path check
       //console.log("DEBUG: whitelist check root", filename, options.noCheckFilesRoot);
       if (options.noCheckFilesRoot.includes(filename)) {
         //console.log("DEBUG: file in whitelist", filename)
@@ -103,6 +104,7 @@ async function run(): Promise<void> {
         continue
       }
 
+      // dynamic path check
       //console.log("DEBUG: whitelist check dynamic", dynamicPath, options.noCheckFilesDynamic);
       if (options.noCheckFilesDynamic.includes(dynamicPath)) {
         setResult(filename, true, "part of noCheckFilesDynamic")
@@ -116,6 +118,7 @@ async function run(): Promise<void> {
       }
 
       //only allowing yaml/yml files
+      //todo "remove else"
       if (filename.endsWith(".yaml") || filename.endsWith(".yml")) {
         //console.log("ℹ file is a yml/yaml")
       }

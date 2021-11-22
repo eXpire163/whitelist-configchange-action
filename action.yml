@@ -5,10 +5,6 @@ branding:
   color: green
   icon: book-open
 inputs:
-  milliseconds: # change this
-    required: true
-    description: 'input description here'
-    default: 'default value if applicable'
   myToken:
     required: true
     description: 'your github token'

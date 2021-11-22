@@ -1,6 +1,7 @@
 import { Options } from "./types/Options";
 
-
+// setting current options
+// todo: find a way to make it more user friendly -> read from .github/whitelist.yml
 export const options: Options = {
   noCheckFilesRoot: ["src/main.ts", "dist/index.js", "dist/index.js.map", "dist/licenses.txt", "dist/sourcemap-register.js", "package-lock.json", "package.json"],
   dynamicFilesCount: 2,
