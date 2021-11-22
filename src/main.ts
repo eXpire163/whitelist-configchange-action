@@ -102,15 +102,15 @@ async function run(): Promise<void> {
 
       // ####### whitelisted files ############
       // absolute path check
-      //console.log("DEBUG: whitelist check root", filename, options.noCheckFilesRoot);
+      //core.debug("whitelist check root", filename, options.noCheckFilesRoot);
       if (options.noCheckFilesRoot.includes(filename)) {
-        //console.log("DEBUG: file in whitelist", filename)
+        //core.debug("file in whitelist", filename)
         setResult(filename, true, "part of noCheckFilesRoot")
         continue
       }
 
       // dynamic path check
-      //console.log("DEBUG: whitelist check dynamic", dynamicPath, options.noCheckFilesDynamic);
+      //core.debug("whitelist check dynamic", dynamicPath, options.noCheckFilesDynamic);
       if (options.noCheckFilesDynamic.includes(dynamicPath)) {
         setResult(filename, true, "part of noCheckFilesDynamic")
         continue

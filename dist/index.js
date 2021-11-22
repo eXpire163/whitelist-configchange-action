@@ -6,6 +6,25 @@ require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 
 "use strict";
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -19,6 +38,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.documentPrPath = exports.documentPR = exports.isDocumentPR = void 0;
 const options_1 = __nccwpck_require__(1353);
 const validation_1 = __nccwpck_require__(581);
+const core = __importStar(__nccwpck_require__(2186));
 //check if PR already has the "docLabel in place" label in place
 function isDocumentPR(octokit, owner, repo, issue_number) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -63,11 +83,11 @@ function documentPrPath(dynamicPath, octokit, owner, repo, issue_number, filenam
     return __awaiter(this, void 0, void 0, function* () {
         // document dynamic path changes
         if (options_1.options.pathDocsDynamic.has(dynamicPath)) {
-            console.log("DEBUG: found dynamic doc file");
+            core.debug("found dynamic doc file");
             const pathDocs = options_1.options.pathDocsDynamic.get(dynamicPath);
             if (pathDocs !== undefined) {
                 for (const check of pathDocs) {
-                    console.log("DEBUG: check in dyn doc", check);
+                    core.debug("check in dyn doc " + check);
                     const isNested = (0, validation_1.hasNested)(diff, check.path);
                     if (isNested) {
                         octokit.rest.issues.createComment({
@@ -243,14 +263,14 @@ function run() {
                     (0, documentPR_1.documentPR)(dynamicPath, octokit, org, repo, pull_number, filename);
                 // ####### whitelisted files ############
                 // absolute path check
-                //console.log("DEBUG: whitelist check root", filename, options.noCheckFilesRoot);
+                //core.debug("whitelist check root", filename, options.noCheckFilesRoot);
                 if (options_1.options.noCheckFilesRoot.includes(filename)) {
-                    //console.log("DEBUG: file in whitelist", filename)
+                    //core.debug("file in whitelist", filename)
                     setResult(filename, true, "part of noCheckFilesRoot");
                     continue;
                 }
                 // dynamic path check
-                //console.log("DEBUG: whitelist check dynamic", dynamicPath, options.noCheckFilesDynamic);
+                //core.debug("whitelist check dynamic", dynamicPath, options.noCheckFilesDynamic);
                 if (options_1.options.noCheckFilesDynamic.includes(dynamicPath)) {
                     setResult(filename, true, "part of noCheckFilesDynamic");
                     continue;

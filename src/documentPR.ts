@@ -1,6 +1,7 @@
 import { options } from "./options";
 import { OctoType } from "./types/OctoType"
 import { hasNested } from "./validation";
+import * as core from '@actions/core';
 
 //check if PR already has the "docLabel in place" label in place
 export async function isDocumentPR(octokit: OctoType, owner: string, repo: string, issue_number: number) {
@@ -47,11 +48,11 @@ export async function documentPrPath(dynamicPath: string, octokit: OctoType, own
 
   // document dynamic path changes
   if (options.pathDocsDynamic.has(dynamicPath)) {
-    console.log("DEBUG: found dynamic doc file");
+    core.debug("found dynamic doc file");
     const pathDocs = options.pathDocsDynamic.get(dynamicPath)
     if (pathDocs !== undefined) {
       for (const check of pathDocs) {
-        console.log("DEBUG: check in dyn doc", check);
+        core.debug("check in dyn doc " + check);
         const isNested = hasNested(diff, check.path)
         if (isNested) {
           octokit.rest.issues.createComment({
