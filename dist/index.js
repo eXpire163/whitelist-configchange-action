@@ -324,7 +324,7 @@ function run() {
             core.info("all files seem to be valid and can be merged");
         }
         catch (error) {
-            core.info("pipeline failed: " + error);
+            core.error("pipeline failed: " + error);
             core.setFailed(`Pipeline failed: ${error}`);
         }
     });
