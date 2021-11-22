@@ -19,11 +19,10 @@ function setResult(filename: string, result: boolean, reason:string) {
   summery.set(filename, { result: result, reason: reason })
 }
 function printSummery() {
-  let message = "########### result ##########\n"
+  core.notice("########### result ##########\n");
   summery.forEach((value: SummeryDetail, key: string) => {
-    message+=`File ${key} was ${value.reason} ${value.result ? "✔" : "✖"}\n`
+    core.notice(`File ${key} was ${value.reason} ${value.result ? "✔" : "✖"}`)
   });
-  core.notice(message)
 }
 
 
@@ -81,6 +80,11 @@ async function run(): Promise<void> {
     for (const file of files) {
 
       const filename = file.filename
+
+      // Manually wrap output
+      core.startGroup('filename')
+
+
 
 
 
@@ -159,6 +163,8 @@ async function run(): Promise<void> {
       const result = await validate(delta, dynamicPath, org, repo, octokit)
       setResult(filename, result.result, result.reason)
 
+
+      core.endGroup()
     }
 
     printSummery()

@@ -184,11 +184,10 @@ function setResult(filename, result, reason) {
     summery.set(filename, { result: result, reason: reason });
 }
 function printSummery() {
-    let message = "########### result ##########\n";
+    core.notice("########### result ##########\n");
     summery.forEach((value, key) => {
-        message += `File ${key} was ${value.reason} ${value.result ? "✔" : "✖"}\n`;
+        core.notice(`File ${key} was ${value.reason} ${value.result ? "✔" : "✖"}`);
     });
-    core.notice(message);
 }
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
@@ -231,6 +230,8 @@ function run() {
             //iterating over changed files
             for (const file of files) {
                 const filename = file.filename;
+                // Manually wrap output
+                core.startGroup('filename');
                 //ignore the first x folders in the path - like project name that could change
                 //techdebt - make it smarter
                 let dynamicPath = filename;
@@ -288,6 +289,7 @@ function run() {
                 //console.log(jsonDiffPatch.formatters.console.format(delta))
                 const result = yield (0, validation_1.validate)(delta, dynamicPath, org, repo, octokit);
                 setResult(filename, result.result, result.reason);
+                core.endGroup();
             }
             printSummery();
             if (summery.size != filesChanged) {
