@@ -27,6 +27,7 @@ function printSummery() {
 
 
 async function run(): Promise<void> {
+
   try {
 
     //core.info("hi there ⚠");
